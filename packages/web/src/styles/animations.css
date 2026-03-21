@@ -35,19 +35,19 @@
 .thinking-collapsible {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 280ms var(--ease-out-expo);
+  transition: grid-template-rows 400ms var(--ease-out-expo);
 }
 .thinking-collapsible.expanded { grid-template-rows: 1fr; }
 .thinking-collapsible > div { overflow: hidden; }
 
-.thinking-chevron { transition: transform 280ms var(--ease-out-expo); }
+.thinking-chevron { transition: transform 400ms var(--ease-out-expo); }
 .thinking-chevron.expanded { transform: rotate(180deg); }
 
-/* Search results expand — slightly slower than thinking */
+/* Search results expand — leisurely pace */
 .search-collapsible {
   display: grid;
   grid-template-rows: 0fr;
-  transition: grid-template-rows 400ms var(--ease-out-expo);
+  transition: grid-template-rows 500ms var(--ease-out-expo);
 }
 .search-collapsible.expanded { grid-template-rows: 1fr; }
 .search-collapsible > div { overflow: hidden; }

@@ -34,6 +34,18 @@ async function writeEvent(stream: any, event: object) {
   await stream.writeSSE({ event: 'message', data: JSON.stringify(event) })
 }
 
+function delay(ms: number) {
+  return new Promise(r => setTimeout(r, ms))
+}
+
+// Stream text with natural typing pace
+async function streamText(stream: any, index: number, deltaType: string, field: string, text: string, chunkSize = 4, delayMs = 15) {
+  for (let i = 0; i < text.length; i += chunkSize) {
+    await writeEvent(stream, { type: 'content_block_delta', index, delta: { type: deltaType, [field]: text.slice(i, i + chunkSize) } })
+    await delay(delayMs)
+  }
+}
+
 agentRoute.post('/agent/stream', async (c) => {
   const body = await c.req.json<{
     prompt: string
@@ -80,10 +92,7 @@ agentRoute.post('/agent/stream', async (c) => {
             // Thinking block
             if (block.type === 'thinking' && block.thinking) {
               await writeEvent(stream, { type: 'content_block_start', index: blockIndex, content_block: { type: 'thinking', thinking: '', signature: '' } })
-              const text = block.thinking
-              for (let i = 0; i < text.length; i += 10) {
-                await writeEvent(stream, { type: 'content_block_delta', index: blockIndex, delta: { type: 'thinking_delta', thinking: text.slice(i, i + 10) } })
-              }
+              await streamText(stream, blockIndex, 'thinking_delta', 'thinking', block.thinking, 6, 12)
               if (block.signature) {
                 await writeEvent(stream, { type: 'content_block_delta', index: blockIndex, delta: { type: 'signature_delta', signature: block.signature } })
               }
@@ -91,13 +100,10 @@ agentRoute.post('/agent/stream', async (c) => {
               blockIndex++
             }
 
-            // Text block
+            // Text block — natural typing speed
             if (block.type === 'text' && block.text) {
               await writeEvent(stream, { type: 'content_block_start', index: blockIndex, content_block: { type: 'text', text: '' } })
-              const text = block.text
-              for (let i = 0; i < text.length; i += 6) {
-                await writeEvent(stream, { type: 'content_block_delta', index: blockIndex, delta: { type: 'text_delta', text: text.slice(i, i + 6) } })
-              }
+              await streamText(stream, blockIndex, 'text_delta', 'text', block.text, 4, 18)
               await writeEvent(stream, { type: 'content_block_stop', index: blockIndex })
               blockIndex++
             }
@@ -146,9 +152,7 @@ agentRoute.post('/agent/stream', async (c) => {
           const resultText = msg.result || ''
           if (resultText) {
             await writeEvent(stream, { type: 'content_block_start', index: blockIndex, content_block: { type: 'text', text: '' } })
-            for (let i = 0; i < resultText.length; i += 6) {
-              await writeEvent(stream, { type: 'content_block_delta', index: blockIndex, delta: { type: 'text_delta', text: resultText.slice(i, i + 6) } })
-            }
+            await streamText(stream, blockIndex, 'text_delta', 'text', resultText, 4, 18)
             await writeEvent(stream, { type: 'content_block_stop', index: blockIndex })
             blockIndex++
           }
@@ -168,27 +172,38 @@ agentRoute.post('/agent/stream', async (c) => {
   })
 })
 
-// Parse tool results into structured format for frontend cards
+// Parse tool results: extract clean title + domain only, no raw JSON
 function parseToolResult(toolName: string, content: any): any {
+  const text = typeof content === 'string' ? content : JSON.stringify(content)
+
   if (toolName === 'WebSearch' || toolName === 'web_search') {
-    // Try to extract search results
-    try {
-      const text = typeof content === 'string' ? content : JSON.stringify(content)
-      // WebSearch results from Claude Code are typically formatted text
-      const results: any[] = []
-      const lines = text.split('\n')
-      for (const line of lines) {
-        const urlMatch = line.match(/https?:\/\/[^\s)]+/)
-        if (urlMatch) {
-          const url = urlMatch[0]
-          let domain = ''
-          try { domain = new URL(url).hostname } catch {}
-          const title = line.replace(urlMatch[0], '').replace(/[-*\[\]()]/g, '').trim() || url
-          results.push({ title, url, domain })
+    const results: { title: string; url: string; domain: string }[] = []
+    // Parse "title":"...","link":"..." pairs from the raw response
+    const re = /"title"\s*:\s*"([^"]+)"[^}]*?"link"\s*:\s*"([^"]+)"/g
+    let m
+    while ((m = re.exec(text)) !== null) {
+      const title = m[1]
+      const url = m[2].replace(/\\"/g, '"')
+      let domain = ''
+      try { domain = new URL(url).hostname } catch {}
+      if (title && !results.some(r => r.title === title)) {
+        results.push({ title, url, domain })
+      }
+    }
+    // Fallback: extract URLs
+    if (results.length === 0) {
+      const urlRe = /https?:\/\/[^\s"',)}\]]+/g
+      let um
+      while ((um = urlRe.exec(text)) !== null) {
+        const url = um[0].replace(/[\\]+$/, '')
+        let domain = ''
+        try { domain = new URL(url).hostname } catch { continue }
+        if (!results.some(r => r.domain === domain)) {
+          results.push({ title: domain, url, domain })
         }
       }
-      if (results.length > 0) return { results }
-    } catch {}
+    }
+    if (results.length > 0) return { results }
   }
-  return { raw: typeof content === 'string' ? content : JSON.stringify(content) }
+  return { results: [] }
 }

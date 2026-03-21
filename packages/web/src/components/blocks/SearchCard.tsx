@@ -72,19 +72,40 @@ export function SearchCard({ block, result }: Props) {
   )
 }
 
+// Clean title: strip JSON fragments, web_search_prime_result_summary, etc.
+function cleanTitle(raw: string): string {
+  if (!raw) return ''
+  // Remove web_search_prime_result_summary prefix and JSON
+  let clean = raw.replace(/^web_search_prime_result_summary:\s*/i, '')
+  // Remove JSON objects/fragments
+  clean = clean.replace(/\{[^}]*\}/g, '')
+  // Remove JSON-like syntax
+  clean = clean.replace(/"text"\s*:\s*/g, '')
+  clean = clean.replace(/"title"\s*:\s*"/g, '').replace(/"link"\s*:\s*"/g, '')
+  clean = clean.replace(/[{}"\[\]]/g, '')
+  // Clean up whitespace
+  clean = clean.replace(/\s+/g, ' ').trim()
+  // If still looks like JSON noise, return domain
+  if (clean.length < 3 || clean.includes('content') && clean.includes('refer')) return ''
+  return clean
+}
+
 function SearchResultRow({ result: r, index, animate }: { result: any; index: number; animate?: boolean }) {
+  const title = cleanTitle(r.title) || r.domain || r.url
+  if (!title && !r.domain) return null
+
   return (
     <div
-      className="flex items-center gap-2.5 px-3.5 py-2 hover:bg-bg-150 transition-colors border-b border-border-100 last:border-b-0"
-      style={animate ? { animation: `result-appear 200ms var(--ease-out-expo) ${index * 40}ms both` } : undefined}
+      className="flex items-center gap-2.5 px-3.5 py-2.5 hover:bg-bg-150 transition-colors border-b border-border-100 last:border-b-0"
+      style={animate ? { animation: `result-appear 250ms var(--ease-out-expo) ${index * 60}ms both` } : undefined}
     >
       <img
         src={`https://www.google.com/s2/favicons?domain=${r.domain || 'example.com'}&sz=16`}
-        alt="" width={14} height={14}
+        alt="" width={16} height={16}
         className="shrink-0 rounded-sm"
         loading="lazy"
       />
-      <span className="text-[13px] text-text-100 truncate flex-1">{r.title || r.url}</span>
+      <span className="text-[13px] text-text-100 truncate flex-1">{title}</span>
       <span className="text-[13px] text-text-400 shrink-0">{r.domain || ''}</span>
     </div>
   )
