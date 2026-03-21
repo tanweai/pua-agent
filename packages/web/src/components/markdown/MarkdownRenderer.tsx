@@ -2,35 +2,43 @@ import { useMemo, Fragment } from 'react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { CodeBlock } from './CodeBlock'
-import { CitationRef, type CitationSource } from '../blocks/CitationRef'
+import { CitationChip, type CitationSource } from '../blocks/CitationRef'
 
 interface Props {
   content: string
   isStreaming?: boolean
-  citations?: Map<number, CitationSource>
+  citations?: CitationSource[]
 }
 
-// Split text to extract [^cite:N] markers and render CitationRef inline
-function renderWithCitations(text: string, citations: Map<number, CitationSource>) {
-  if (!citations.size) return text
+// Replace URLs in text with CitationChip if matching a known citation source
+function renderTextWithCitations(text: string, citations: CitationSource[]) {
+  if (!citations.length) return text
 
-  const parts = text.split(/(\[\^cite:\d+\])/)
+  // Find URLs in text
+  const urlRegex = /(https?:\/\/[^\s),。；！？]+)/g
+  const parts = text.split(urlRegex)
   if (parts.length === 1) return text
 
   return parts.map((part, i) => {
-    const match = part.match(/\[\^cite:(\d+)\]/)
-    if (match) {
-      const num = parseInt(match[1])
-      const source = citations.get(num)
+    if (urlRegex.test(part) || part.startsWith('http')) {
+      // Check if this URL matches a citation source
+      const source = citations.find(c => part.includes(c.domain))
       if (source) {
-        return <CitationRef key={i} number={num} source={source} />
+        return <CitationChip key={i} source={source} />
       }
+      // Unknown URL — render as plain link
+      return (
+        <a key={i} href={part} target="_blank" rel="noopener noreferrer"
+          className="text-accent-100 hover:text-accent-200 underline">
+          {part}
+        </a>
+      )
     }
     return <Fragment key={i}>{part}</Fragment>
   })
 }
 
-export function MarkdownRenderer({ content, isStreaming, citations = new Map() }: Props) {
+export function MarkdownRenderer({ content, isStreaming, citations = [] }: Props) {
   const components = useMemo(
     () => ({
       code({ className, children, ...props }: any) {
@@ -40,22 +48,34 @@ export function MarkdownRenderer({ content, isStreaming, citations = new Map() }
         }
         return <CodeBlock language={match[1]} code={String(children).replace(/\n$/, '')} />
       },
-      // Handle paragraphs to inject citation refs
+      // Handle links — replace with CitationChip if matching source
+      a({ href, children }: any) {
+        if (href && citations.length) {
+          const source = citations.find(c => href.includes(c.domain))
+          if (source) {
+            return <CitationChip source={source} />
+          }
+        }
+        return (
+          <a href={href} target="_blank" rel="noopener noreferrer"
+            className="text-accent-100 hover:text-accent-200 underline">
+            {children}
+          </a>
+        )
+      },
+      // Handle paragraphs — detect inline URLs
       p({ children }: any) {
-        if (citations.size === 0) return <p>{children}</p>
-
-        // Process text children for citation markers
+        if (!citations.length) return <p>{children}</p>
         const processed = Array.isArray(children)
           ? children.map((child: any, i: number) => {
               if (typeof child === 'string') {
-                return <Fragment key={i}>{renderWithCitations(child, citations)}</Fragment>
+                return <Fragment key={i}>{renderTextWithCitations(child, citations)}</Fragment>
               }
               return child
             })
           : typeof children === 'string'
-            ? renderWithCitations(children, citations)
+            ? renderTextWithCitations(children, citations)
             : children
-
         return <p>{processed}</p>
       },
     }),

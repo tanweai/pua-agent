@@ -24,9 +24,18 @@ export function useSSEStream() {
     const isAgent = options.useAgent
     const endpoint = isAgent ? '/api/agent/stream' : '/api/chat/stream'
 
+    // For Agent mode: build full conversation context as prompt
+    const agentPrompt = isAgent
+      ? options.messages.map(m => {
+          const role = m.role === 'user' ? 'User' : 'Assistant'
+          const content = typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
+          return `${role}: ${content}`
+        }).join('\n\n') + '\n\nPlease respond to the latest user message above.'
+      : ''
+
     const body: any = isAgent
       ? {
-          prompt: options.messages[options.messages.length - 1]?.content || '',
+          prompt: agentPrompt,
           model: options.model,
           tools: ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch'],
           thinkingEnabled: options.thinkingEnabled,
