@@ -26,6 +26,7 @@ export function ChatView({
   const { startStream, stopStream } = useSSEStream()
   const { streamingMessage, dispatch, toggleThinking, reset } = useStreamReducer()
   const wasStreamingRef = useRef(false)
+  const agentSessionRef = useRef<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [prefill, setPrefill] = useState('')
 
@@ -74,8 +75,13 @@ export function ChatView({
       thinkingEnabled: model.hasThinking,
       thinkingBudget: 10000,
       useAgent: model.useAgent,
+      agentSessionId: agentSessionRef.current || undefined,
       onEvent: (event: StreamEvent | any) => {
         switch (event.type) {
+          case 'session_init':
+            // Capture session_id for multi-turn resume
+            agentSessionRef.current = event.session_id
+            break
           case 'message_start':
             dispatch({ type: 'MESSAGE_START', id: event.message.id, model: event.message.model, usage: event.message.usage })
             break

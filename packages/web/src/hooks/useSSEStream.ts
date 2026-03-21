@@ -7,7 +7,8 @@ interface StreamOptions {
   thinkingEnabled: boolean
   thinkingBudget: number
   useAgent?: boolean
-  onEvent: (event: StreamEvent) => void
+  agentSessionId?: string  // For multi-turn resume
+  onEvent: (event: StreamEvent | any) => void
   onError: (error: Error) => void
   onComplete: () => void
 }
@@ -20,25 +21,20 @@ export function useSSEStream() {
     const controller = new AbortController()
     abortRef.current = controller
 
-    // Choose endpoint: Agent SDK or direct API
     const isAgent = options.useAgent
     const endpoint = isAgent ? '/api/agent/stream' : '/api/chat/stream'
 
-    // For Agent mode: build full conversation context as prompt
-    const agentPrompt = isAgent
-      ? options.messages.map(m => {
-          const role = m.role === 'user' ? 'User' : 'Assistant'
-          const content = typeof m.content === 'string' ? m.content : JSON.stringify(m.content)
-          return `${role}: ${content}`
-        }).join('\n\n') + '\n\nPlease respond to the latest user message above.'
-      : ''
+    // Agent mode: send only the latest user message as prompt
+    // Session resume handles context automatically
+    const lastUserMsg = options.messages.filter(m => m.role === 'user').pop()
+    const prompt = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : ''
 
     const body: any = isAgent
       ? {
-          prompt: agentPrompt,
+          prompt,
           model: options.model,
           tools: ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch'],
-          thinkingEnabled: options.thinkingEnabled,
+          ...(options.agentSessionId && { sessionId: options.agentSessionId }),
         }
       : {
           model: options.model,
@@ -76,7 +72,7 @@ export function useSSEStream() {
             const data = line.slice(6)
             if (data === '[DONE]') continue
             try {
-              const event: StreamEvent = JSON.parse(data)
+              const event = JSON.parse(data)
               options.onEvent(event)
             } catch { /* skip malformed */ }
           }

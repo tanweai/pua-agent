@@ -51,6 +51,7 @@ agentRoute.post('/agent/stream', async (c) => {
     prompt: string
     model?: string
     tools?: string[]
+    sessionId?: string  // Resume previous session for multi-turn
   }>()
 
   return streamSSE(c, async (stream) => {
@@ -66,24 +67,37 @@ agentRoute.post('/agent/stream', async (c) => {
 
       const allowedTools = body.tools || ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch']
 
+      const queryOptions: any = {
+        pathToClaudeCodeExecutable: CLAUDE_CODE_PATH,
+        model: body.model || 'claude-sonnet-4-6',
+        allowedTools,
+        maxTurns: 20,
+        permissionMode: 'bypassPermissions',
+        allowDangerouslySkipPermissions: true,
+        env: AGENT_ENV,
+        cwd: process.cwd(),
+      }
+
+      // Multi-turn: resume previous session
+      if (body.sessionId) {
+        queryOptions.resume = body.sessionId
+        console.log(`[Agent] Resuming session: ${body.sessionId}`)
+      }
+
       for await (const message of query({
         prompt: body.prompt,
-        options: {
-          pathToClaudeCodeExecutable: CLAUDE_CODE_PATH,
-          model: body.model || 'claude-sonnet-4-6',
-          allowedTools,
-          maxTurns: 20,
-          permissionMode: 'bypassPermissions',
-          allowDangerouslySkipPermissions: true,
-          env: AGENT_ENV,
-          cwd: process.cwd(),
-        },
+        options: queryOptions,
       })) {
         const msg = message as any
 
         // === system/init ===
         if (msg.type === 'system' && msg.subtype === 'init') {
           console.log(`[Agent] Session: ${msg.session_id}, model: ${msg.model}`)
+          // Send session_id to frontend for multi-turn resume
+          await writeEvent(stream, {
+            type: 'session_init' as any,
+            session_id: msg.session_id,
+          })
         }
 
         // === assistant — contains content blocks (text, tool_use, thinking) ===
