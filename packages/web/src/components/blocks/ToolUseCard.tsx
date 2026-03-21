@@ -11,12 +11,13 @@ interface Props {
 }
 
 export function ToolUseCard({ block, result }: Props) {
-  switch (block.toolName) {
-    case 'web_search':
+  const name = block.toolName.toLowerCase()
+  switch (true) {
+    case name === 'web_search' || name === 'websearch':
       return <SearchCard block={block} result={result} />
-    case 'web_fetch':
+    case name === 'web_fetch' || name === 'webfetch':
       return <FetchCard block={block} />
-    case 'code_execution':
+    case name === 'code_execution':
       return <CodeExecCard block={block} result={result} />
     default:
       return (

@@ -1,43 +1,27 @@
 import { Hono } from 'hono'
 import { streamSSE } from 'hono/streaming'
 import { query } from '@anthropic-ai/claude-agent-sdk'
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+import { existsSync, realpathSync } from 'fs'
 
 export const agentRoute = new Hono()
 
-// Claude Code executable path
-// Agent SDK bundles its own Claude Code cli.js — resolve via filesystem
-import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
-import { existsSync } from 'fs'
-
-import { realpathSync } from 'fs'
-
 function findCliJs(): string {
-  // Resolve through pnpm symlinks to the real file
   const symlinkPath = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'node_modules', '@anthropic-ai', 'claude-agent-sdk', 'cli.js')
   try {
     const real = realpathSync(symlinkPath)
-    if (existsSync(real)) {
-      console.log(`[Agent] Found CLI via symlink: ${real}`)
-      return real
-    }
+    if (existsSync(real)) return real
   } catch {}
-
-  // Fallback: global Claude Code installation
   const global = '/usr/local/lib/node_modules/@anthropic-ai/claude-code/cli.js'
-  if (existsSync(global)) {
-    console.log(`[Agent] Found CLI globally: ${global}`)
-    return global
-  }
-
+  if (existsSync(global)) return global
   throw new Error('Claude Code cli.js not found')
 }
 
 const CLAUDE_CODE_PATH = findCliJs()
+console.log(`[Agent] CLI path: ${CLAUDE_CODE_PATH}`)
 
-// ZhiPu API credentials — MUST include full process.env (especially PATH)
-// otherwise spawn can't find 'node' binary
-const ZHIPU_ENV = {
+const AGENT_ENV = {
   ...process.env,
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
   ANTHROPIC_AUTH_TOKEN: process.env.ANTHROPIC_API_KEY || '',
@@ -47,41 +31,28 @@ const ZHIPU_ENV = {
 }
 
 async function writeEvent(stream: any, event: object) {
-  await stream.writeSSE({
-    event: 'message',
-    data: JSON.stringify(event),
-  })
+  await stream.writeSSE({ event: 'message', data: JSON.stringify(event) })
 }
-
-let blockIndex = 0
 
 agentRoute.post('/agent/stream', async (c) => {
   const body = await c.req.json<{
     prompt: string
     model?: string
     tools?: string[]
-    thinkingEnabled?: boolean
   }>()
 
   return streamSSE(c, async (stream) => {
-    blockIndex = 0
+    let blockIndex = 0
+    const toolNameMap = new Map<string, string>()
 
     try {
-      // Emit message_start
       const msgId = 'msg_agent_' + Date.now()
       await writeEvent(stream, {
         type: 'message_start',
-        message: {
-          id: msgId, type: 'message', role: 'assistant',
-          model: body.model || 'glm-4.7',
-          content: [], stop_reason: null,
-          usage: { input_tokens: 0, output_tokens: 0 },
-        },
+        message: { id: msgId, type: 'message', role: 'assistant', model: body.model || 'agent', content: [], stop_reason: null, usage: { input_tokens: 0, output_tokens: 0 } },
       })
 
       const allowedTools = body.tools || ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch']
-
-      console.log(`[Agent] Starting query: "${body.prompt.slice(0, 50)}..." tools=${allowedTools.join(',')}`)
 
       for await (const message of query({
         prompt: body.prompt,
@@ -92,137 +63,132 @@ agentRoute.post('/agent/stream', async (c) => {
           maxTurns: 20,
           permissionMode: 'bypassPermissions',
           allowDangerouslySkipPermissions: true,
-          env: ZHIPU_ENV,
+          env: AGENT_ENV,
           cwd: process.cwd(),
-          stderr: (data: string) => {
-            console.log('[Agent stderr]', data.slice(0, 200))
-          },
         },
       })) {
-        // System messages — session init, progress
-        if (message.type === 'system') {
-          if (message.subtype === 'init') {
-            console.log(`[Agent] Session started: ${message.session_id}`)
-            // Emit as a thinking block — "Agent initializing..."
-            await writeEvent(stream, {
-              type: 'content_block_start', index: blockIndex,
-              content_block: { type: 'thinking', thinking: '', signature: '' },
-            })
-            await writeEvent(stream, {
-              type: 'content_block_delta', index: blockIndex,
-              delta: { type: 'thinking_delta', thinking: `Agent session started (${message.session_id})` },
-            })
-            await writeEvent(stream, { type: 'content_block_stop', index: blockIndex })
-            blockIndex++
-          }
+        const msg = message as any
+
+        // === system/init ===
+        if (msg.type === 'system' && msg.subtype === 'init') {
+          console.log(`[Agent] Session: ${msg.session_id}, model: ${msg.model}`)
         }
 
-        // Assistant messages — contain content blocks
-        if (message.type === 'assistant') {
-          // The assistant message may contain content blocks
-          if (message.content) {
-            for (const block of message.content) {
-              if (block.type === 'text' && block.text) {
-                await writeEvent(stream, {
-                  type: 'content_block_start', index: blockIndex,
-                  content_block: { type: 'text', text: '' },
-                })
-                // Stream the text in chunks for smooth rendering
-                const text = block.text
-                for (let i = 0; i < text.length; i += 8) {
-                  await writeEvent(stream, {
-                    type: 'content_block_delta', index: blockIndex,
-                    delta: { type: 'text_delta', text: text.slice(i, i + 8) },
-                  })
-                }
-                await writeEvent(stream, { type: 'content_block_stop', index: blockIndex })
-                blockIndex++
+        // === assistant — contains content blocks (text, tool_use, thinking) ===
+        if (msg.type === 'assistant' && msg.message?.content) {
+          for (const block of msg.message.content) {
+            // Thinking block
+            if (block.type === 'thinking' && block.thinking) {
+              await writeEvent(stream, { type: 'content_block_start', index: blockIndex, content_block: { type: 'thinking', thinking: '', signature: '' } })
+              const text = block.thinking
+              for (let i = 0; i < text.length; i += 10) {
+                await writeEvent(stream, { type: 'content_block_delta', index: blockIndex, delta: { type: 'thinking_delta', thinking: text.slice(i, i + 10) } })
               }
-
-              if (block.type === 'tool_use') {
-                await writeEvent(stream, {
-                  type: 'content_block_start', index: blockIndex,
-                  content_block: { type: 'tool_use', id: block.id || `tool_${blockIndex}`, name: block.name || 'unknown', input: {} },
-                })
-                await writeEvent(stream, {
-                  type: 'content_block_delta', index: blockIndex,
-                  delta: { type: 'input_json_delta', partial_json: JSON.stringify(block.input || {}) },
-                })
-                await writeEvent(stream, { type: 'content_block_stop', index: blockIndex })
-                blockIndex++
+              if (block.signature) {
+                await writeEvent(stream, { type: 'content_block_delta', index: blockIndex, delta: { type: 'signature_delta', signature: block.signature } })
               }
-
-              if (block.type === 'thinking' && block.thinking) {
-                await writeEvent(stream, {
-                  type: 'content_block_start', index: blockIndex,
-                  content_block: { type: 'thinking', thinking: '', signature: '' },
-                })
-                const thinkText = block.thinking
-                for (let i = 0; i < thinkText.length; i += 10) {
-                  await writeEvent(stream, {
-                    type: 'content_block_delta', index: blockIndex,
-                    delta: { type: 'thinking_delta', thinking: thinkText.slice(i, i + 10) },
-                  })
-                }
-                if (block.signature) {
-                  await writeEvent(stream, {
-                    type: 'content_block_delta', index: blockIndex,
-                    delta: { type: 'signature_delta', signature: block.signature },
-                  })
-                }
-                await writeEvent(stream, { type: 'content_block_stop', index: blockIndex })
-                blockIndex++
-              }
+              await writeEvent(stream, { type: 'content_block_stop', index: blockIndex })
+              blockIndex++
             }
-          }
-        }
 
-        // Result message — final output
-        if ('result' in message) {
-          const resultText = message.result || ''
-          if (resultText) {
-            await writeEvent(stream, {
-              type: 'content_block_start', index: blockIndex,
-              content_block: { type: 'text', text: '' },
-            })
-            for (let i = 0; i < resultText.length; i += 6) {
+            // Text block
+            if (block.type === 'text' && block.text) {
+              await writeEvent(stream, { type: 'content_block_start', index: blockIndex, content_block: { type: 'text', text: '' } })
+              const text = block.text
+              for (let i = 0; i < text.length; i += 6) {
+                await writeEvent(stream, { type: 'content_block_delta', index: blockIndex, delta: { type: 'text_delta', text: text.slice(i, i + 6) } })
+              }
+              await writeEvent(stream, { type: 'content_block_stop', index: blockIndex })
+              blockIndex++
+            }
+
+            // Tool use block — this is what we need for SearchCard!
+            if (block.type === 'tool_use') {
+              const toolName = block.name || 'unknown'
+              const toolId = block.id || `tool_${blockIndex}`
+              toolNameMap.set(toolId, toolName)
+              console.log(`[Agent] Tool call: ${toolName} id=${toolId}`, JSON.stringify(block.input || {}).slice(0, 100))
+
+              await writeEvent(stream, {
+                type: 'content_block_start', index: blockIndex,
+                content_block: { type: 'tool_use', id: toolId, name: toolName, input: {} },
+              })
               await writeEvent(stream, {
                 type: 'content_block_delta', index: blockIndex,
-                delta: { type: 'text_delta', text: resultText.slice(i, i + 6) },
+                delta: { type: 'input_json_delta', partial_json: JSON.stringify(block.input || {}) },
               })
+              await writeEvent(stream, { type: 'content_block_stop', index: blockIndex })
+              blockIndex++
+            }
+          }
+        }
+
+        // === user with tool results ===
+        if (msg.type === 'user' && msg.message?.content) {
+          for (const block of msg.message.content) {
+            if (block.type === 'tool_result' && block.tool_use_id) {
+              const content = typeof block.content === 'string' ? block.content : JSON.stringify(block.content || '')
+              console.log(`[Agent] Tool result for ${block.tool_use_id}: ${content.slice(0, 150)}`)
+
+              const resolvedToolName = toolNameMap.get(block.tool_use_id) || 'tool'
+              await writeEvent(stream, {
+                type: 'tool_result' as any,
+                tool_use_id: block.tool_use_id,
+                tool_name: resolvedToolName,
+                content: parseToolResult(resolvedToolName, content),
+              })
+            }
+          }
+        }
+
+        // === result — final output ===
+        if (msg.type === 'result') {
+          const resultText = msg.result || ''
+          if (resultText) {
+            await writeEvent(stream, { type: 'content_block_start', index: blockIndex, content_block: { type: 'text', text: '' } })
+            for (let i = 0; i < resultText.length; i += 6) {
+              await writeEvent(stream, { type: 'content_block_delta', index: blockIndex, delta: { type: 'text_delta', text: resultText.slice(i, i + 6) } })
             }
             await writeEvent(stream, { type: 'content_block_stop', index: blockIndex })
             blockIndex++
           }
 
-          // End message
-          await writeEvent(stream, {
-            type: 'message_delta',
-            delta: { stop_reason: message.stop_reason || 'end_turn' },
-            usage: { output_tokens: blockIndex * 100 },
-          })
+          await writeEvent(stream, { type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: blockIndex * 50 } })
           await writeEvent(stream, { type: 'message_stop' })
         }
       }
     } catch (err: any) {
       console.error('[Agent Error]', err.message)
-
-      // If we haven't sent message_stop yet, send error
-      await writeEvent(stream, {
-        type: 'content_block_start', index: blockIndex,
-        content_block: { type: 'text', text: '' },
-      })
-      await writeEvent(stream, {
-        type: 'content_block_delta', index: blockIndex,
-        delta: { type: 'text_delta', text: `**Error:** ${err.message}` },
-      })
+      await writeEvent(stream, { type: 'content_block_start', index: blockIndex, content_block: { type: 'text', text: '' } })
+      await writeEvent(stream, { type: 'content_block_delta', index: blockIndex, delta: { type: 'text_delta', text: `**Error:** ${err.message}` } })
       await writeEvent(stream, { type: 'content_block_stop', index: blockIndex })
-      await writeEvent(stream, {
-        type: 'message_delta',
-        delta: { stop_reason: 'end_turn' },
-        usage: { output_tokens: 0 },
-      })
+      await writeEvent(stream, { type: 'message_delta', delta: { stop_reason: 'end_turn' }, usage: { output_tokens: 0 } })
       await writeEvent(stream, { type: 'message_stop' })
     }
   })
 })
+
+// Parse tool results into structured format for frontend cards
+function parseToolResult(toolName: string, content: any): any {
+  if (toolName === 'WebSearch' || toolName === 'web_search') {
+    // Try to extract search results
+    try {
+      const text = typeof content === 'string' ? content : JSON.stringify(content)
+      // WebSearch results from Claude Code are typically formatted text
+      const results: any[] = []
+      const lines = text.split('\n')
+      for (const line of lines) {
+        const urlMatch = line.match(/https?:\/\/[^\s)]+/)
+        if (urlMatch) {
+          const url = urlMatch[0]
+          let domain = ''
+          try { domain = new URL(url).hostname } catch {}
+          const title = line.replace(urlMatch[0], '').replace(/[-*\[\]()]/g, '').trim() || url
+          results.push({ title, url, domain })
+        }
+      }
+      if (results.length > 0) return { results }
+    } catch {}
+  }
+  return { raw: typeof content === 'string' ? content : JSON.stringify(content) }
+}
