@@ -1,8 +1,10 @@
+import { useMemo } from 'react'
 import { ThinkingBlock } from './ThinkingBlock'
 import { TextBlock } from './TextBlock'
 import { ToolUseCard } from './ToolUseCard'
 import { WidgetRenderer } from './WidgetRenderer'
 import type { ContentBlock, ToolResultBlock } from '../../types/message'
+import type { CitationSource } from './CitationRef'
 
 interface Props {
   blocks: ContentBlock[]
@@ -12,6 +14,21 @@ interface Props {
 }
 
 export function BlockRenderer({ blocks, toolResults, onToggleThinking, onSendPrompt }: Props) {
+  // Collect citation sources from all tool results (search results)
+  const citations = useMemo<CitationSource[]>(() => {
+    const sources: CitationSource[] = []
+    for (const result of Object.values(toolResults)) {
+      if (result.content?.results) {
+        for (const r of result.content.results) {
+          if (r.title && r.domain && !sources.some(s => s.domain === r.domain && s.title === r.title)) {
+            sources.push({ title: r.title, url: r.url || '', domain: r.domain, snippet: r.snippet })
+          }
+        }
+      }
+    }
+    return sources
+  }, [toolResults])
+
   return (
     <div className="space-y-1">
       {blocks.map((block, index) => {
@@ -19,9 +36,8 @@ export function BlockRenderer({ blocks, toolResults, onToggleThinking, onSendPro
           case 'thinking':
             return <ThinkingBlock key={index} block={block} onToggle={() => onToggleThinking(index)} />
           case 'text':
-            return <TextBlock key={index} block={block} />
+            return <TextBlock key={index} block={block} citations={citations} />
           case 'tool_use': {
-            // Visualizer widgets — inline iframe rendering
             if (block.toolName.startsWith('visualize:') || block.toolName === 'show_widget') {
               const input = block.input || {}
               return (
