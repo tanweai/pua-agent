@@ -1,0 +1,282 @@
+/* ========== Animation Curves ========== */
+:root {
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-default: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+/* ========== Message ========== */
+@keyframes message-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.message-enter { animation: message-enter 200ms var(--ease-out-expo); }
+
+/* ========== Streaming Cursor ========== */
+@keyframes cursor-blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+.streaming-cursor::after {
+  content: '\25CB';
+  animation: cursor-blink 800ms step-end infinite;
+  color: var(--accent-100);
+  margin-left: 2px;
+}
+
+/* ========== Thinking ========== */
+@keyframes thinking-pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.thinking-pulse { animation: thinking-pulse 2s ease-in-out infinite; }
+
+.thinking-collapsible {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 280ms var(--ease-out-expo);
+}
+.thinking-collapsible.expanded { grid-template-rows: 1fr; }
+.thinking-collapsible > div { overflow: hidden; }
+
+.thinking-chevron { transition: transform 280ms var(--ease-out-expo); }
+.thinking-chevron.expanded { transform: rotate(180deg); }
+
+/* Search results expand — slightly slower than thinking */
+.search-collapsible {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 400ms var(--ease-out-expo);
+}
+.search-collapsible.expanded { grid-template-rows: 1fr; }
+.search-collapsible > div { overflow: hidden; }
+
+@keyframes done-appear {
+  0% { transform: scale(0) rotate(-90deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(5deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+.thinking-done-icon { animation: done-appear 350ms var(--ease-spring); }
+
+@keyframes dot-bounce {
+  0%, 60%, 100% { transform: translateY(0); }
+  30% { transform: translateY(-4px); }
+}
+.thinking-dots span { animation: dot-bounce 1.4s ease-in-out infinite; }
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ========== Spinner ========== */
+@keyframes spin { to { transform: rotate(360deg); } }
+.animate-spin-slow { animation: spin 1.5s linear infinite; }
+
+/* ========== Collapsible (generic) ========== */
+.collapsible-content {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 200ms var(--ease-out-expo);
+}
+.collapsible-content.expanded { grid-template-rows: 1fr; }
+.collapsible-content > div { overflow: hidden; }
+
+/* ========== Tool Results ========== */
+.tool-results {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 350ms var(--ease-out-expo);
+}
+.tool-results.loaded { grid-template-rows: 1fr; }
+.tool-results > div { overflow: hidden; }
+
+@keyframes result-appear {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.search-result-item {
+  opacity: 0; transform: translateY(6px);
+  animation: result-appear 200ms var(--ease-out-expo) forwards;
+}
+.search-result-item:nth-child(1) { animation-delay: 0ms; }
+.search-result-item:nth-child(2) { animation-delay: 40ms; }
+.search-result-item:nth-child(3) { animation-delay: 60ms; }
+.search-result-item:nth-child(4) { animation-delay: 80ms; }
+.search-result-item:nth-child(5) { animation-delay: 100ms; }
+
+/* Search loading bar */
+@keyframes search-progress {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.search-loading-bar {
+  height: 3px; border-radius: 999px;
+  background: linear-gradient(90deg, transparent, var(--accent-100), transparent);
+  background-size: 200% 100%;
+  animation: search-progress 1.5s ease-in-out infinite;
+}
+
+/* ========== Dropdown ========== */
+@keyframes dropdown-enter {
+  from { opacity: 0; transform: scale(0.92) translateY(4px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+.dropdown-enter { animation: dropdown-enter 180ms var(--ease-out-expo); }
+
+/* ========== Toast ========== */
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(12px) scale(0.95); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+@keyframes toast-out {
+  to { opacity: 0; transform: translateX(-50%) translateY(-8px) scale(0.95); }
+}
+.toast-enter { animation: toast-in 300ms var(--ease-out-expo); }
+.toast-exit { animation: toast-out 200ms var(--ease-in) forwards; }
+
+/* ========== Artifact Panel ========== */
+@keyframes artifact-slide-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+.artifact-panel-enter { animation: artifact-slide-in 350ms var(--ease-out-expo); }
+.chat-area-transition { transition: width 350ms var(--ease-out-expo); }
+
+/* ========== Skeleton Shimmer ========== */
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-shimmer {
+  background: linear-gradient(110deg, var(--bg-200) 30%, var(--bg-150) 50%, var(--bg-200) 70%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* ========== File Chip ========== */
+@keyframes chip-pop {
+  0% { transform: scale(0); opacity: 0; }
+  60% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.file-chip-enter { animation: chip-pop 250ms var(--ease-spring); }
+
+@keyframes chip-remove {
+  to { transform: scale(0.8); opacity: 0; }
+}
+.file-chip-exit { animation: chip-remove 200ms var(--ease-in) forwards; }
+
+/* ========== Drop Overlay ========== */
+@keyframes drop-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.8; }
+  50% { transform: scale(1.08); opacity: 1; }
+}
+.drop-icon { animation: drop-pulse 1.2s ease-in-out infinite; }
+
+/* ========== Send Button ========== */
+@keyframes send-ready {
+  from { transform: scale(0.9); }
+  to { transform: scale(1); }
+}
+@keyframes send-press {
+  0% { transform: scale(1); }
+  30% { transform: scale(0.85); }
+  100% { transform: scale(1); }
+}
+
+/* ========== Copy Check Pop ========== */
+@keyframes check-pop {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* ========== Context Menu ========== */
+@keyframes context-menu-appear {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+.context-menu-enter { animation: context-menu-appear 120ms var(--ease-out-expo); }
+
+/* ========== Scroll To Bottom ========== */
+@keyframes scroll-btn-appear {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px) scale(0.9); }
+  to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+}
+.scroll-btn-enter { animation: scroll-btn-appear 200ms var(--ease-out-expo); }
+
+/* ========== Dialog ========== */
+@keyframes dialog-enter {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+.dialog-enter { animation: dialog-enter 200ms var(--ease-out-expo); }
+
+@keyframes dialog-exit {
+  from { opacity: 1; transform: scale(1); }
+  to { opacity: 0; transform: scale(0.96); }
+}
+.dialog-exit { animation: dialog-exit 150ms var(--ease-in) forwards; }
+
+/* ========== Conversation Item ========== */
+@keyframes list-item-enter {
+  from { opacity: 0; transform: translateX(-8px); max-height: 0; }
+  to { opacity: 1; transform: translateX(0); max-height: 60px; }
+}
+.conv-item-enter { animation: list-item-enter 250ms var(--ease-out-expo); }
+
+/* ========== Stagger children ========== */
+@keyframes stagger-up {
+  from { opacity: 0; transform: translateY(20px) scale(0.95); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.stagger-child { animation: stagger-up 300ms var(--ease-out-expo) both; }
+.stagger-child:nth-child(1) { animation-delay: 0ms; }
+.stagger-child:nth-child(2) { animation-delay: 60ms; }
+.stagger-child:nth-child(3) { animation-delay: 120ms; }
+.stagger-child:nth-child(4) { animation-delay: 180ms; }
+
+/* ========== Mobile Bottom Sheet ========== */
+.mobile-sheet {
+  position: fixed; bottom: 0; left: 0; right: 0; z-index: 60;
+  border-radius: 16px 16px 0 0;
+  background: var(--bg-100);
+  transform: translateY(100%);
+  transition: transform 350ms var(--ease-out-expo);
+  max-height: 90vh;
+}
+.mobile-sheet.open { transform: translateY(0); }
+.sheet-handle {
+  width: 36px; height: 4px; border-radius: 2px;
+  background: var(--bg-300); margin: 8px auto;
+}
+
+/* ========== Button base ========== */
+.btn-interactive {
+  transition: all 150ms var(--ease-out-expo);
+  will-change: transform;
+}
+.btn-interactive:hover { transform: translateY(-0.5px); }
+.btn-interactive:active { transform: translateY(0.5px) scale(0.98); transition-duration: 50ms; }
+.btn-interactive:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+/* ========== Message Actions ========== */
+.message-actions {
+  opacity: 0; transform: translateY(4px);
+  transition: all 180ms var(--ease-default);
+  pointer-events: none;
+}
+.group:hover .message-actions,
+.message-actions:focus-within {
+  opacity: 1; transform: translateY(0); pointer-events: auto;
+}
+
+/* ========== Code Diff ========== */
+.diff-line-removed {
+  background: color-mix(in srgb, var(--error) 12%, transparent);
+  text-decoration: line-through;
+  text-decoration-color: var(--error);
+  opacity: 0.7;
+}
+.diff-line-added {
+  background: color-mix(in srgb, var(--success) 12%, transparent);
+}
