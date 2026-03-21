@@ -4,11 +4,46 @@ import { query } from '@anthropic-ai/claude-agent-sdk'
 
 export const agentRoute = new Hono()
 
-// ZhiPu API credentials — passed via env to Agent SDK subprocess
+// Claude Code executable path
+// Agent SDK bundles its own Claude Code cli.js — resolve via filesystem
+import { fileURLToPath } from 'url'
+import { dirname, join } from 'path'
+import { existsSync } from 'fs'
+
+import { realpathSync } from 'fs'
+
+function findCliJs(): string {
+  // Resolve through pnpm symlinks to the real file
+  const symlinkPath = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'node_modules', '@anthropic-ai', 'claude-agent-sdk', 'cli.js')
+  try {
+    const real = realpathSync(symlinkPath)
+    if (existsSync(real)) {
+      console.log(`[Agent] Found CLI via symlink: ${real}`)
+      return real
+    }
+  } catch {}
+
+  // Fallback: global Claude Code installation
+  const global = '/usr/local/lib/node_modules/@anthropic-ai/claude-code/cli.js'
+  if (existsSync(global)) {
+    console.log(`[Agent] Found CLI globally: ${global}`)
+    return global
+  }
+
+  throw new Error('Claude Code cli.js not found')
+}
+
+const CLAUDE_CODE_PATH = findCliJs()
+
+// ZhiPu API credentials — MUST include full process.env (especially PATH)
+// otherwise spawn can't find 'node' binary
 const ZHIPU_ENV = {
+  ...process.env,
+  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY || '',
   ANTHROPIC_AUTH_TOKEN: process.env.ANTHROPIC_API_KEY || '',
   ANTHROPIC_BASE_URL: process.env.ANTHROPIC_BASE_URL || 'https://open.bigmodel.cn/api/anthropic',
   CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
+  DISABLE_AUTOUPDATER: '1',
 }
 
 async function writeEvent(stream: any, event: object) {
@@ -51,6 +86,7 @@ agentRoute.post('/agent/stream', async (c) => {
       for await (const message of query({
         prompt: body.prompt,
         options: {
+          pathToClaudeCodeExecutable: CLAUDE_CODE_PATH,
           model: body.model || 'claude-sonnet-4-6',
           allowedTools,
           maxTurns: 20,
@@ -58,6 +94,9 @@ agentRoute.post('/agent/stream', async (c) => {
           allowDangerouslySkipPermissions: true,
           env: ZHIPU_ENV,
           cwd: process.cwd(),
+          stderr: (data: string) => {
+            console.log('[Agent stderr]', data.slice(0, 200))
+          },
         },
       })) {
         // System messages — session init, progress
