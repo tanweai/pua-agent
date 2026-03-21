@@ -72,6 +72,7 @@ export function ChatView({
     // Agent mode: track turns to avoid resetting on each message_start
     let agentTurnCount = 0
     let agentBlockOffset = 0
+    let agentMaxBlockIdx = -1  // Track highest block index used
 
     startStream({
       model: model.id,
@@ -102,26 +103,20 @@ export function ChatView({
             break
 
           case 'content_block_start': {
-            // In Agent mode, offset block indices across turns
-            const idx = isAgent && agentTurnCount > 1
-              ? event.index + agentBlockOffset
-              : event.index
+            const idx = isAgent ? event.index + agentBlockOffset : event.index
+            if (idx > agentMaxBlockIdx) agentMaxBlockIdx = idx
             dispatch({ type: 'BLOCK_START', index: idx, block: event.content_block })
             break
           }
 
           case 'content_block_delta': {
-            const idx = isAgent && agentTurnCount > 1
-              ? event.index + agentBlockOffset
-              : event.index
+            const idx = isAgent ? event.index + agentBlockOffset : event.index
             dispatch({ type: 'BLOCK_DELTA', index: idx, delta: event.delta })
             break
           }
 
           case 'content_block_stop': {
-            const idx = isAgent && agentTurnCount > 1
-              ? event.index + agentBlockOffset
-              : event.index
+            const idx = isAgent ? event.index + agentBlockOffset : event.index
             dispatch({ type: 'BLOCK_STOP', index: idx })
             break
           }
@@ -136,9 +131,8 @@ export function ChatView({
 
           case 'message_stop':
             if (isAgent) {
-              // Agent mode: DON'T end the message. Update block offset for next turn.
-              // message_delta carries usage.output_tokens which tells us the highest block index
-              agentBlockOffset += 10 // Offset for next turn's block indices
+              // Agent mode: DON'T end. Set offset = highest used index + 1
+              agentBlockOffset = agentMaxBlockIdx + 1
             } else {
               dispatch({ type: 'MESSAGE_STOP' })
             }

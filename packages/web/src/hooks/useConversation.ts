@@ -3,7 +3,7 @@ import type { Message } from '../types/message'
 import type { Conversation } from '../types/conversation'
 import { MODEL_OPTIONS } from '../types/conversation'
 
-const DEFAULT_MODEL = MODEL_OPTIONS[3] // Opus 4.6 Extended
+const DEFAULT_MODEL = MODEL_OPTIONS[1] // Agent (GLM-5)
 
 export function useConversation() {
   const [conversations, setConversations] = useState<Conversation[]>([])
