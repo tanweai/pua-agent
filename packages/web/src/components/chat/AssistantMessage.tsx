@@ -30,7 +30,7 @@ export function AssistantMessage({ message, onToggleThinking, onShowToast, onSen
   }, [])
 
   return (
-    <div className="group message-enter">
+    <div className="message-enter">
       <div className="max-w-3xl mx-auto px-4">
         <BlockRenderer
           blocks={message.blocks}
@@ -39,8 +39,10 @@ export function AssistantMessage({ message, onToggleThinking, onShowToast, onSen
           onSendPrompt={onSendPrompt}
         />
 
+        {/* Action bar — separate hover zone, not affected by search cards */}
         {!message.isStreaming && message.blocks.length > 0 && (
-          <div className="message-actions mt-2 flex items-center gap-1">
+          <div className="group/actions mt-2">
+            <div className="opacity-0 group-hover/actions:opacity-100 transition-opacity duration-150 flex items-center gap-1">
             <button
               onClick={() => handleLike('up')}
               className={`p-1.5 rounded-lg transition-colors ${
@@ -70,6 +72,7 @@ export function AssistantMessage({ message, onToggleThinking, onShowToast, onSen
             <button className="p-1.5 rounded-lg hover:bg-bg-200 text-text-400 hover:text-text-200 transition-colors">
               <RefreshCw size={14} />
             </button>
+          </div>
           </div>
         )}
       </div>
