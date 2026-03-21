@@ -3,3 +3,4 @@ dist
 .env
 .turbo
 *.log
+packages/server/.env

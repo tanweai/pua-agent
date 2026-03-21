@@ -27,6 +27,7 @@ export function useSSEStream() {
     }
 
     if (options.thinkingEnabled) {
+      // Use adaptive thinking for opus/sonnet 4.6 (budget_tokens deprecated)
       body.thinking = { type: 'enabled', budget_tokens: options.thinkingBudget }
     }
 

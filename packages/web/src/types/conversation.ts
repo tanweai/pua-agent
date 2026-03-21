@@ -15,13 +15,14 @@ export interface ModelOption {
   id: string
   name: string
   displayName: string
+  glmModel: string
   hasThinking: boolean
 }
 
 export const MODEL_OPTIONS: ModelOption[] = [
-  { id: 'claude-haiku-4-5-20251001', name: 'Haiku 4.5', displayName: 'Haiku 4.5', hasThinking: false },
-  { id: 'claude-sonnet-4-6-20250514', name: 'Sonnet 4.6', displayName: 'Sonnet 4.6', hasThinking: false },
-  { id: 'claude-sonnet-4-6-20250514', name: 'Sonnet 4.6 Extended', displayName: 'Sonnet 4.6 Extended', hasThinking: true },
-  { id: 'claude-opus-4-6-20250514', name: 'Opus 4.6 Extended', displayName: 'Opus 4.6 Extended', hasThinking: true },
-  { id: 'claude-opus-4-6-20250514', name: 'Opus 4.6', displayName: 'Opus 4.6', hasThinking: false },
+  { id: 'claude-haiku-4-5', name: 'Haiku 4.5', displayName: 'GLM-4.5-Air', glmModel: 'GLM-4.5-Air', hasThinking: false },
+  { id: 'claude-sonnet-4-6', name: 'Sonnet 4.6', displayName: 'GLM-4.7', glmModel: 'GLM-4.7', hasThinking: false },
+  { id: 'claude-sonnet-4-6', name: 'Sonnet 4.6 Extended', displayName: 'GLM-4.7 Extended', glmModel: 'GLM-4.7', hasThinking: true },
+  { id: 'claude-opus-4-6', name: 'Opus 4.6 Extended', displayName: 'GLM-5 Extended', glmModel: 'GLM-5', hasThinking: true },
+  { id: 'claude-opus-4-6', name: 'Opus 4.6', displayName: 'GLM-5', glmModel: 'GLM-5', hasThinking: false },
 ]
