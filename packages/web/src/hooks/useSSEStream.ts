@@ -6,6 +6,7 @@ interface StreamOptions {
   messages: Array<{ role: string; content: any }>
   thinkingEnabled: boolean
   thinkingBudget: number
+  useAgent?: boolean
   onEvent: (event: StreamEvent) => void
   onError: (error: Error) => void
   onComplete: () => void
@@ -19,20 +20,27 @@ export function useSSEStream() {
     const controller = new AbortController()
     abortRef.current = controller
 
-    const body: any = {
-      model: options.model,
-      messages: options.messages,
-      max_tokens: 16384,
-      stream: true,
-    }
+    // Choose endpoint: Agent SDK or direct API
+    const isAgent = options.useAgent
+    const endpoint = isAgent ? '/api/agent/stream' : '/api/chat/stream'
 
-    if (options.thinkingEnabled) {
-      // Use adaptive thinking for opus/sonnet 4.6 (budget_tokens deprecated)
-      body.thinking = { type: 'enabled', budget_tokens: options.thinkingBudget }
-    }
+    const body: any = isAgent
+      ? {
+          prompt: options.messages[options.messages.length - 1]?.content || '',
+          model: options.model,
+          tools: ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch'],
+          thinkingEnabled: options.thinkingEnabled,
+        }
+      : {
+          model: options.model,
+          messages: options.messages,
+          max_tokens: 16384,
+          stream: true,
+          ...(options.thinkingEnabled && { thinking: { type: 'enabled', budget_tokens: options.thinkingBudget } }),
+        }
 
     try {
-      const response = await fetch('/api/chat/stream', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

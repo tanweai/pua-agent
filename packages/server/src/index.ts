@@ -6,6 +6,7 @@ import 'dotenv/config'
 import { chatRoute } from './routes/chat.js'
 import { conversationsRoute } from './routes/conversations.js'
 import { uploadRoute } from './routes/upload.js'
+import { agentRoute } from './routes/agent.js'
 
 const app = new Hono()
 
@@ -13,6 +14,7 @@ app.use('*', logger())
 app.use('*', cors({ origin: 'http://localhost:5173' }))
 
 app.route('/api', chatRoute)
+app.route('/api', agentRoute)
 app.route('/api', conversationsRoute)
 app.route('/api', uploadRoute)
 

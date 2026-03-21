@@ -73,6 +73,7 @@ export function ChatView({
       messages: apiMessages,
       thinkingEnabled: model.hasThinking,
       thinkingBudget: 10000,
+      useAgent: model.useAgent,
       onEvent: (event: StreamEvent | any) => {
         switch (event.type) {
           case 'message_start':

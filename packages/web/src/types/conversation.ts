@@ -17,6 +17,7 @@ export interface ModelOption {
   displayName: string
   glmModel: string
   hasThinking: boolean
+  useAgent?: boolean
 }
 
 export const MODEL_OPTIONS: ModelOption[] = [
@@ -25,4 +26,5 @@ export const MODEL_OPTIONS: ModelOption[] = [
   { id: 'claude-sonnet-4-6', name: 'Sonnet 4.6 Extended', displayName: 'GLM-4.7 Extended', glmModel: 'GLM-4.7', hasThinking: true },
   { id: 'claude-opus-4-6', name: 'Opus 4.6 Extended', displayName: 'GLM-5 Extended', glmModel: 'GLM-5', hasThinking: true },
   { id: 'claude-opus-4-6', name: 'Opus 4.6', displayName: 'GLM-5', glmModel: 'GLM-5', hasThinking: false },
+  { id: 'claude-sonnet-4-6', name: 'Agent Mode', displayName: 'Agent (GLM-4.7)', glmModel: 'GLM-4.7', hasThinking: false, useAgent: true },
 ]

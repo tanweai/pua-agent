@@ -46,6 +46,9 @@ export function ModelSelector({ selected, onChange }: Props) {
               {m.hasThinking && (
                 <span className="ml-auto text-[10px] text-accent-100 bg-accent-100/10 px-1.5 py-0.5 rounded shrink-0">thinking</span>
               )}
+              {m.useAgent && (
+                <span className="ml-auto text-[10px] text-success bg-success/10 px-1.5 py-0.5 rounded shrink-0">agent</span>
+              )}
             </button>
           ))}
         </div>
