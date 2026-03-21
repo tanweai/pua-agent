@@ -10,9 +10,10 @@ interface Props {
   onToggleThinking: (messageIndex: number, blockIndex: number) => void
   onQuickAction?: (text: string) => void
   onShowToast?: (msg: string) => void
+  onSendPrompt?: (text: string) => void
 }
 
-export function MessageList({ messages, onToggleThinking, onQuickAction, onShowToast }: Props) {
+export function MessageList({ messages, onToggleThinking, onQuickAction, onShowToast, onSendPrompt }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [showScrollBtn, setShowScrollBtn] = useState(false)
@@ -64,6 +65,7 @@ export function MessageList({ messages, onToggleThinking, onQuickAction, onShowT
               message={msg}
               onToggleThinking={(blockIndex) => onToggleThinking(i, blockIndex)}
               onShowToast={onShowToast}
+              onSendPrompt={onSendPrompt}
             />
           )
         ))}

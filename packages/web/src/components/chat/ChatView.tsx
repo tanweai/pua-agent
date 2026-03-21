@@ -140,6 +140,7 @@ export function ChatView({
         onToggleThinking={handleToggleThinking}
         onQuickAction={handleQuickAction}
         onShowToast={(msg) => onShowToast(msg, 'success')}
+        onSendPrompt={handleSend}
       />
       {error && <ErrorBanner message={error} onRetry={() => { setError(null) }} />}
       <InputArea

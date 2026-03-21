@@ -7,9 +7,10 @@ interface Props {
   message: Message
   onToggleThinking: (index: number) => void
   onShowToast?: (msg: string) => void
+  onSendPrompt?: (text: string) => void
 }
 
-export function AssistantMessage({ message, onToggleThinking, onShowToast }: Props) {
+export function AssistantMessage({ message, onToggleThinking, onShowToast, onSendPrompt }: Props) {
   const [copied, setCopied] = useState(false)
   const [liked, setLiked] = useState<'up' | 'down' | null>(null)
 
@@ -35,6 +36,7 @@ export function AssistantMessage({ message, onToggleThinking, onShowToast }: Pro
           blocks={message.blocks}
           toolResults={message.toolResults || {}}
           onToggleThinking={onToggleThinking}
+          onSendPrompt={onSendPrompt}
         />
 
         {!message.isStreaming && message.blocks.length > 0 && (
