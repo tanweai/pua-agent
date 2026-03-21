@@ -21,13 +21,13 @@ export function SearchCard({ block, result }: Props) {
   const extraResults = results.slice(COLLAPSED_COUNT)
 
   return (
-    <div className="my-3">
+    <div className="my-1">
       {/* Header */}
-      <div className="flex items-center gap-2 mb-1">
-        <Globe size={16} className="text-text-300 shrink-0" />
-        <span className="text-sm text-text-300 flex-1 truncate">{query}</span>
+      <div className="flex items-center gap-2 mb-1.5">
+        <Globe size={15} className="text-text-300 shrink-0" />
+        <span className="text-[13px] text-text-300 flex-1 truncate">{query}</span>
         {!isLoading && results.length > 0 && (
-          <span className="text-sm text-text-400 shrink-0">{results.length} results</span>
+          <span className="text-[13px] text-text-400 shrink-0">{results.length} results</span>
         )}
         {!isLoading && hasMore && (
           <button

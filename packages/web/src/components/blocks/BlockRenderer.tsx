@@ -30,7 +30,7 @@ export function BlockRenderer({ blocks, toolResults, onToggleThinking, onSendPro
   }, [toolResults])
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-3">
       {blocks.map((block, index) => {
         switch (block.type) {
           case 'thinking':
