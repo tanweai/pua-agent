@@ -118,7 +118,7 @@
   height: 3px; border-radius: 999px;
   background: linear-gradient(90deg, transparent, var(--accent-100), transparent);
   background-size: 200% 100%;
-  animation: search-progress 1.5s ease-in-out infinite;
+  animation: search-progress 3s ease-in-out infinite;
 }
 
 /* ========== Dropdown ========== */
