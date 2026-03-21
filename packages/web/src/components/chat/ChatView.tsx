@@ -69,6 +69,10 @@ export function ChatView({
 
     reset()
 
+    // Agent mode: track turns to avoid resetting on each message_start
+    let agentTurnCount = 0
+    let agentBlockOffset = 0
+
     startStream({
       model: model.id,
       messages: apiMessages,
@@ -77,29 +81,69 @@ export function ChatView({
       useAgent: model.useAgent,
       agentSessionId: agentSessionRef.current || undefined,
       onEvent: (event: StreamEvent | any) => {
+        const isAgent = model.useAgent
+
         switch (event.type) {
           case 'session_init':
-            // Capture session_id for multi-turn resume
             agentSessionRef.current = event.session_id
             break
+
           case 'message_start':
-            dispatch({ type: 'MESSAGE_START', id: event.message.id, model: event.message.model, usage: event.message.usage })
+            if (isAgent) {
+              agentTurnCount++
+              if (agentTurnCount === 1) {
+                // First turn: create the message
+                dispatch({ type: 'MESSAGE_START', id: event.message.id, model: event.message.model, usage: event.message.usage })
+              }
+              // Subsequent turns: just continue accumulating blocks (don't reset)
+            } else {
+              dispatch({ type: 'MESSAGE_START', id: event.message.id, model: event.message.model, usage: event.message.usage })
+            }
             break
-          case 'content_block_start':
-            dispatch({ type: 'BLOCK_START', index: event.index, block: event.content_block })
+
+          case 'content_block_start': {
+            // In Agent mode, offset block indices across turns
+            const idx = isAgent && agentTurnCount > 1
+              ? event.index + agentBlockOffset
+              : event.index
+            dispatch({ type: 'BLOCK_START', index: idx, block: event.content_block })
             break
-          case 'content_block_delta':
-            dispatch({ type: 'BLOCK_DELTA', index: event.index, delta: event.delta })
+          }
+
+          case 'content_block_delta': {
+            const idx = isAgent && agentTurnCount > 1
+              ? event.index + agentBlockOffset
+              : event.index
+            dispatch({ type: 'BLOCK_DELTA', index: idx, delta: event.delta })
             break
-          case 'content_block_stop':
-            dispatch({ type: 'BLOCK_STOP', index: event.index })
+          }
+
+          case 'content_block_stop': {
+            const idx = isAgent && agentTurnCount > 1
+              ? event.index + agentBlockOffset
+              : event.index
+            dispatch({ type: 'BLOCK_STOP', index: idx })
             break
+          }
+
           case 'message_delta':
-            dispatch({ type: 'MESSAGE_DELTA', stopReason: event.delta.stop_reason, outputTokens: event.usage.output_tokens })
+            if (isAgent) {
+              // Don't set stop_reason in Agent mode — wait for result
+            } else {
+              dispatch({ type: 'MESSAGE_DELTA', stopReason: event.delta.stop_reason, outputTokens: event.usage.output_tokens })
+            }
             break
+
           case 'message_stop':
-            dispatch({ type: 'MESSAGE_STOP' })
+            if (isAgent) {
+              // Agent mode: DON'T end the message. Update block offset for next turn.
+              // message_delta carries usage.output_tokens which tells us the highest block index
+              agentBlockOffset += 10 // Offset for next turn's block indices
+            } else {
+              dispatch({ type: 'MESSAGE_STOP' })
+            }
             break
+
           case 'tool_result':
             dispatch({ type: 'TOOL_RESULT', toolId: event.tool_use_id, toolName: event.tool_name, content: event.content })
             break
@@ -109,7 +153,12 @@ export function ChatView({
         setError(err.message)
         dispatch({ type: 'ERROR', error: err.message })
       },
-      onComplete: () => {},
+      onComplete: () => {
+        // In Agent mode, MESSAGE_STOP is deferred until stream ends
+        if (model.useAgent) {
+          dispatch({ type: 'MESSAGE_STOP' })
+        }
+      },
     })
   }, [messages, model, startStream, dispatch, reset, onAddMessage, onEnsureConversation])
 
