@@ -4,16 +4,19 @@ import { AssistantMessage } from './AssistantMessage'
 import { EmptyState } from './EmptyState'
 import { ScrollToBottom } from '../ui/ScrollToBottom'
 import type { Message } from '../../types/message'
+import type { ModelOption } from '../../types/conversation'
 
 interface Props {
   messages: Message[]
+  model: ModelOption
   onToggleThinking: (messageIndex: number, blockIndex: number) => void
   onQuickAction?: (text: string) => void
   onShowToast?: (msg: string) => void
   onSendPrompt?: (text: string) => void
+  onModelChange?: (model: ModelOption) => void
 }
 
-export function MessageList({ messages, onToggleThinking, onQuickAction, onShowToast, onSendPrompt }: Props) {
+export function MessageList({ messages, model, onToggleThinking, onQuickAction, onShowToast, onSendPrompt, onModelChange }: Props) {
   const bottomRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [showScrollBtn, setShowScrollBtn] = useState(false)
@@ -50,7 +53,14 @@ export function MessageList({ messages, onToggleThinking, onQuickAction, onShowT
   }, [])
 
   if (messages.length === 0) {
-    return <EmptyState onQuickAction={onQuickAction || (() => {})} />
+    return (
+      <EmptyState
+        model={model}
+        onSend={onSendPrompt || (() => {})}
+        onModelChange={onModelChange || (() => {})}
+        onShowToast={(msg) => onShowToast?.(msg)}
+      />
+    )
   }
 
   return (

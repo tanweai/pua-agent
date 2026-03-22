@@ -214,26 +214,33 @@ export function ChatView({
     }
   }, [allMessages.length, streamingMessage.id, toggleThinking, onToggleThinking])
 
+  const hasMessages = allMessages.length > 0
+
   return (
     <div className="flex-1 flex flex-col min-h-0 min-w-0">
       <MessageList
         messages={allMessages}
+        model={model}
         onToggleThinking={handleToggleThinking}
         onQuickAction={handleQuickAction}
         onShowToast={(msg) => onShowToast(msg, 'success')}
         onSendPrompt={handleSend}
+        onModelChange={onModelChange}
       />
       {error && <ErrorBanner message={error} onRetry={() => { setError(null) }} />}
-      <InputArea
-        isStreaming={isStreaming}
-        model={model}
-        onSend={handleSend}
-        onStop={handleStop}
-        onModelChange={onModelChange}
-        prefill={prefill}
-        onClearPrefill={handleClearPrefill}
-        onShowToast={onShowToast}
-      />
+      {/* Only show bottom InputArea after first message */}
+      {hasMessages && (
+        <InputArea
+          isStreaming={isStreaming}
+          model={model}
+          onSend={handleSend}
+          onStop={handleStop}
+          onModelChange={onModelChange}
+          prefill={prefill}
+          onClearPrefill={handleClearPrefill}
+          onShowToast={onShowToast}
+        />
+      )}
     </div>
   )
 }
