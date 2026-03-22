@@ -3,17 +3,19 @@ import { ThinkingBlock } from './ThinkingBlock'
 import { TextBlock } from './TextBlock'
 import { ToolUseCard } from './ToolUseCard'
 import { WidgetRenderer } from './WidgetRenderer'
-import type { ContentBlock, ToolResultBlock } from '../../types/message'
+import { TeamPanel } from './TeamPanel'
+import type { ContentBlock, ToolResultBlock, TaskProgress } from '../../types/message'
 import type { CitationSource } from './CitationRef'
 
 interface Props {
   blocks: ContentBlock[]
   toolResults: Record<string, ToolResultBlock>
+  taskProgress?: Record<string, TaskProgress>
   onToggleThinking: (index: number) => void
   onSendPrompt?: (text: string) => void
 }
 
-export function BlockRenderer({ blocks, toolResults, onToggleThinking, onSendPrompt }: Props) {
+export function BlockRenderer({ blocks, toolResults, taskProgress, onToggleThinking, onSendPrompt }: Props) {
   // Collect citation sources from all tool results (search results)
   const citations = useMemo<CitationSource[]>(() => {
     const sources: CitationSource[] = []
@@ -29,8 +31,16 @@ export function BlockRenderer({ blocks, toolResults, onToggleThinking, onSendPro
     return sources
   }, [toolResults])
 
+  // Show Team Panel when 2+ agent blocks exist (aggregated view)
+  const agentBlockCount = blocks.filter(
+    b => b.type === 'tool_use' && (b.toolName.toLowerCase() === 'agent' || b.toolName.toLowerCase() === 'task')
+  ).length
+
   return (
     <div className="space-y-3">
+      {agentBlockCount >= 2 && (
+        <TeamPanel blocks={blocks} taskProgress={taskProgress} />
+      )}
       {blocks.map((block, index) => {
         switch (block.type) {
           case 'thinking':
@@ -50,7 +60,7 @@ export function BlockRenderer({ blocks, toolResults, onToggleThinking, onSendPro
                 />
               )
             }
-            return <ToolUseCard key={index} block={block} result={toolResults[block.toolId]} />
+            return <ToolUseCard key={index} block={block} result={toolResults[block.toolId]} progress={taskProgress?.[block.toolId]} />
           }
           default:
             return null

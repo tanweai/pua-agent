@@ -8,6 +8,7 @@ interface StreamOptions {
   thinkingBudget: number
   useAgent?: boolean
   agentSessionId?: string  // For multi-turn resume
+  customAgents?: Record<string, { description: string; prompt?: string; tools?: string[] }>
   onEvent: (event: StreamEvent | any) => void
   onError: (error: Error) => void
   onComplete: () => void
@@ -33,8 +34,9 @@ export function useSSEStream() {
       ? {
           prompt,
           model: options.model,
-          tools: ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch'],
+          tools: ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch', 'Agent', 'Skill'],
           ...(options.agentSessionId && { sessionId: options.agentSessionId }),
+          ...(options.customAgents && Object.keys(options.customAgents).length > 0 && { agents: options.customAgents }),
         }
       : {
           model: options.model,

@@ -37,11 +37,12 @@ agentRoute.post('/agent/stream', async (c) => {
     model?: string
     tools?: string[]
     sessionId?: string
+    agents?: Record<string, { description: string; prompt?: string; tools?: string[] }>
   }>()
 
   return streamSSE(c, async (stream) => {
     try {
-      const allowedTools = body.tools || ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch', 'Agent']
+      const allowedTools = body.tools || ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch', 'Agent', 'Skill']
       const toolNameMap = new Map<string, string>()
 
       const queryOptions: any = {
@@ -52,6 +53,7 @@ agentRoute.post('/agent/stream', async (c) => {
         maxTurns: 20,
         permissionMode: 'bypassPermissions',
         allowDangerouslySkipPermissions: true,
+        agentProgressSummaries: true,
         env: AGENT_ENV,
         cwd: process.cwd(),
         systemPrompt: `You are a helpful AI assistant with web search capabilities.
@@ -63,6 +65,10 @@ IMPORTANT CITATION RULES:
 - NEVER list sources separately — all citations must be inline [labels]
 - Every factual claim from search results MUST have an inline [SourceName] label
 - Use Chinese when the user asks in Chinese`,
+      }
+
+      if (body.agents && Object.keys(body.agents).length > 0) {
+        queryOptions.agents = body.agents
       }
 
       if (body.sessionId) {
@@ -88,10 +94,37 @@ IMPORTANT CITATION RULES:
           await writeEvent(stream, event)
         }
 
-        // === system/init: emit session_id for multi-turn ===
-        if (msg.type === 'system' && msg.subtype === 'init') {
-          console.log(`[Agent] Session: ${msg.session_id}`)
-          await writeEvent(stream, { type: 'session_init' as any, session_id: msg.session_id })
+        // === system messages: init, task_started, task_progress, task_notification ===
+        if (msg.type === 'system') {
+          if (msg.subtype === 'init') {
+            console.log(`[Agent] Session: ${msg.session_id}`)
+            await writeEvent(stream, { type: 'session_init' as any, session_id: msg.session_id })
+          }
+          if (msg.subtype === 'task_started') {
+            await writeEvent(stream, {
+              type: 'task_started' as any,
+              tool_use_id: msg.tool_use_id,
+              session_id: msg.session_id,
+            })
+          }
+          if (msg.subtype === 'task_progress') {
+            await writeEvent(stream, {
+              type: 'task_progress' as any,
+              tool_use_id: msg.tool_use_id,
+              usage: msg.usage,
+              tool_use_count: msg.tool_use_count,
+              duration_ms: msg.duration_ms,
+              summary: msg.summary,
+            })
+          }
+          if (msg.subtype === 'task_notification') {
+            await writeEvent(stream, {
+              type: 'task_notification' as any,
+              tool_use_id: msg.tool_use_id,
+              session_id: msg.session_id,
+              message: msg.message,
+            })
+          }
         }
 
         // === user: tool results — emit for SearchCard ===
@@ -126,6 +159,22 @@ IMPORTANT CITATION RULES:
       await writeEvent(stream, { type: 'message_stop' })
     }
   })
+})
+
+// Available tools/skills for the frontend UI
+const AVAILABLE_TOOLS = [
+  { name: 'WebSearch', icon: 'search', description: 'Search the web for information', category: 'search' },
+  { name: 'WebFetch', icon: 'globe', description: 'Fetch and analyze web pages', category: 'search' },
+  { name: 'Read', icon: 'file-text', description: 'Read files in the workspace', category: 'file' },
+  { name: 'Glob', icon: 'folder-search', description: 'Find files by pattern', category: 'file' },
+  { name: 'Grep', icon: 'search', description: 'Search file contents', category: 'file' },
+  { name: 'Bash', icon: 'terminal', description: 'Execute shell commands', category: 'system' },
+  { name: 'Agent', icon: 'bot', description: 'Spawn subagents for complex tasks', category: 'agent' },
+  { name: 'Skill', icon: 'zap', description: 'Invoke specialized skills', category: 'agent' },
+]
+
+agentRoute.get('/agent/tools', (c) => {
+  return c.json({ tools: AVAILABLE_TOOLS })
 })
 
 function parseToolResult(toolName: string, content: any): any {

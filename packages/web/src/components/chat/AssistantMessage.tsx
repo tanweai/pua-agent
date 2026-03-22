@@ -35,6 +35,7 @@ export function AssistantMessage({ message, onToggleThinking, onShowToast, onSen
         <BlockRenderer
           blocks={message.blocks}
           toolResults={message.toolResults || {}}
+          taskProgress={message.taskProgress}
           onToggleThinking={onToggleThinking}
           onSendPrompt={onSendPrompt}
         />

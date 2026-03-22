@@ -51,6 +51,29 @@ export interface PingEvent {
   type: 'ping'
 }
 
+// Agent SDK task events
+export interface TaskStartedEvent {
+  type: 'task_started'
+  tool_use_id: string
+  session_id: string
+}
+
+export interface TaskProgressEvent {
+  type: 'task_progress'
+  tool_use_id: string
+  usage?: { input_tokens: number; output_tokens: number }
+  tool_use_count?: number
+  duration_ms?: number
+  summary?: string
+}
+
+export interface TaskNotificationEvent {
+  type: 'task_notification'
+  tool_use_id: string
+  session_id?: string
+  message?: string
+}
+
 export type StreamEvent =
   | MessageStartEvent
   | ContentBlockStartEvent
@@ -59,3 +82,6 @@ export type StreamEvent =
   | MessageDeltaEvent
   | MessageStopEvent
   | PingEvent
+  | TaskStartedEvent
+  | TaskProgressEvent
+  | TaskNotificationEvent

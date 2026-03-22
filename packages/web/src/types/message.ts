@@ -34,12 +34,21 @@ export interface ToolResultBlock {
 
 export type ContentBlock = ThinkingBlock | TextBlock | ToolUseBlock | ToolResultBlock
 
+export interface TaskProgress {
+  toolUseId: string
+  status: 'started' | 'running' | 'completed'
+  toolUseCount?: number
+  durationMs?: number
+  summary?: string
+}
+
 export interface Message {
   id: string
   role: 'user' | 'assistant'
   content?: string
   blocks: ContentBlock[]
   toolResults: Record<string, ToolResultBlock>
+  taskProgress?: Record<string, TaskProgress>
   model?: string
   isStreaming: boolean
   stopReason?: string

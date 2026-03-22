@@ -2,6 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { Send, Square, Plus } from 'lucide-react'
 import { ModelSelector } from './ModelSelector'
 import { FileChip } from './FileChip'
+import { SkillChips } from './SkillChips'
 import { useAutoResize } from '../../hooks/useAutoResize'
 import type { ModelOption } from '../../types/conversation'
 
@@ -88,9 +89,20 @@ export function InputArea({ isStreaming, model, onSend, onStop, onModelChange, p
 
   const hasInput = input.trim().length > 0
 
+  const handleSkillSelect = useCallback((prompt: string) => {
+    setInput(prompt)
+    setTimeout(() => textareaRef.current?.focus(), 50)
+  }, [textareaRef])
+
   return (
     <div className="border-t border-border-100 bg-bg-100 px-4 py-3">
       <div className="max-w-3xl mx-auto">
+        {/* Skill chips — show when input is empty and not streaming */}
+        {!hasInput && !isStreaming && model.useAgent && (
+          <div className="mb-2">
+            <SkillChips onSelect={handleSkillSelect} />
+          </div>
+        )}
         <div className="rounded-2xl border border-border-200 bg-bg-100 shadow-sm">
           {files.length > 0 && (
             <div className="flex flex-wrap gap-2 px-4 pt-3">

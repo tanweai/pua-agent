@@ -16,9 +16,21 @@ function buildNameMap(citations: CitationSource[]): Map<string, CitationSource> 
   for (const c of citations) {
     const domain = c.domain.replace(/^www\./, '')
     map.set(domain.toLowerCase(), c)
+    // Short domain name (e.g., "reuters" from "reuters.com")
     const short = domain.split('.')[0]
     if (short.length > 2) map.set(short.toLowerCase(), c)
+    // Full title
     if (c.title.length > 3) map.set(c.title.toLowerCase(), c)
+    // Title words (for fuzzy matching "Reuters" from "Reuters News")
+    const titleWords = c.title.split(/[\s\-_|]+/)
+    for (const w of titleWords) {
+      if (w.length > 3) map.set(w.toLowerCase(), c)
+    }
+    // Domain without TLD (e.g., "coindesk" from "coindesk.com")
+    const domainParts = domain.split('.')
+    if (domainParts.length > 1 && domainParts[0].length > 2) {
+      map.set(domainParts[0].toLowerCase(), c)
+    }
   }
   return map
 }

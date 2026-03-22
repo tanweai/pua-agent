@@ -276,6 +276,16 @@
   opacity: 1; transform: translateY(0); pointer-events: auto;
 }
 
+/* ========== Progress Indeterminate ========== */
+@keyframes progress-indeterminate {
+  0% { width: 0%; margin-left: 0; }
+  50% { width: 60%; margin-left: 20%; }
+  100% { width: 0%; margin-left: 100%; }
+}
+.animate-progress-indeterminate {
+  animation: progress-indeterminate 2s var(--ease-out-expo) infinite;
+}
+
 /* ========== Code Diff ========== */
 .diff-line-removed {
   background: color-mix(in srgb, var(--error) 12%, transparent);

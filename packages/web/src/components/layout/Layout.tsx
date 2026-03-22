@@ -10,6 +10,7 @@ import { useTheme } from '../../hooks/useTheme'
 import { useConversation } from '../../hooks/useConversation'
 import { useKeyboardShortcuts } from '../../hooks/useKeyboardShortcuts'
 import { useToast } from '../../hooks/useToast'
+import { useAgentConfig } from '../../hooks/useAgentConfig'
 import type { ArtifactFile } from '../../types/artifact'
 
 export function Layout() {
@@ -19,6 +20,7 @@ export function Layout() {
 
   const { mode, toggle: toggleTheme } = useTheme()
   const { toasts, show: showToast, dismiss: dismissToast } = useToast()
+  const { agents: customAgents, updateAgents, agentSdkConfig } = useAgentConfig()
   const {
     conversations,
     activeId,
@@ -64,11 +66,13 @@ export function Layout() {
         activeId={activeId}
         themeMode={mode}
         isOpen={sidebarOpen}
+        customAgents={customAgents}
         onSelect={(id) => { selectConversation(id); setSidebarOpen(false) }}
         onNew={handleNew}
         onDelete={deleteConversation}
         onToggleTheme={toggleTheme}
         onClose={() => setSidebarOpen(false)}
+        onAgentsChange={updateAgents}
       />
 
       <FileDropZone onDrop={handleFileDrop}>
@@ -85,6 +89,7 @@ export function Layout() {
             <ChatView
               messages={messages}
               model={model}
+              customAgents={agentSdkConfig}
               onAddMessage={addMessage}
               onUpdateLastMessage={updateLastMessage}
               onModelChange={setModel}

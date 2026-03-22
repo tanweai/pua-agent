@@ -1,5 +1,5 @@
 import { useReducer, useCallback } from 'react'
-import type { ContentBlock, ThinkingBlock, TextBlock, ToolUseBlock, ToolResultBlock, Message } from '../types/message'
+import type { ContentBlock, ThinkingBlock, TextBlock, ToolUseBlock, ToolResultBlock, TaskProgress, Message } from '../types/message'
 import type { ContentBlockStartEvent } from '../types/stream'
 import { generateThinkingSummary } from '../utils/generateSummary'
 
@@ -12,6 +12,9 @@ type Action =
   | { type: 'MESSAGE_DELTA'; stopReason: string; outputTokens: number }
   | { type: 'MESSAGE_STOP' }
   | { type: 'TOOL_RESULT'; toolId: string; toolName: string; content: any }
+  | { type: 'TASK_STARTED'; toolUseId: string }
+  | { type: 'TASK_PROGRESS'; toolUseId: string; toolUseCount?: number; durationMs?: number; summary?: string }
+  | { type: 'TASK_NOTIFICATION'; toolUseId: string }
   | { type: 'TOGGLE_THINKING'; index: number }
   | { type: 'ERROR'; error: string }
   | { type: 'RESET' }
@@ -36,6 +39,7 @@ const EMPTY_MESSAGE: Message = {
   role: 'assistant',
   blocks: [],
   toolResults: {},
+  taskProgress: {},
   isStreaming: false,
   createdAt: 0,
 }
@@ -108,6 +112,32 @@ function streamReducer(state: Message, action: Action): Message {
         blocks,
         toolResults: { ...state.toolResults, [action.toolId]: resultBlock },
       }
+    }
+
+    case 'TASK_STARTED': {
+      const tp: TaskProgress = { toolUseId: action.toolUseId, status: 'started' }
+      return { ...state, taskProgress: { ...state.taskProgress, [action.toolUseId]: tp } }
+    }
+
+    case 'TASK_PROGRESS': {
+      const existing = state.taskProgress?.[action.toolUseId]
+      const tp: TaskProgress = {
+        toolUseId: action.toolUseId,
+        status: 'running',
+        toolUseCount: action.toolUseCount ?? existing?.toolUseCount,
+        durationMs: action.durationMs ?? existing?.durationMs,
+        summary: action.summary ?? existing?.summary,
+      }
+      return { ...state, taskProgress: { ...state.taskProgress, [action.toolUseId]: tp } }
+    }
+
+    case 'TASK_NOTIFICATION': {
+      const existing = state.taskProgress?.[action.toolUseId]
+      if (existing) {
+        const tp: TaskProgress = { ...existing, status: 'completed' }
+        return { ...state, taskProgress: { ...state.taskProgress, [action.toolUseId]: tp } }
+      }
+      return state
     }
 
     case 'MESSAGE_DELTA':

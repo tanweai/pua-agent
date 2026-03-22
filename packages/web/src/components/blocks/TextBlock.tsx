@@ -9,13 +9,22 @@ interface Props {
   citations?: CitationSource[]
 }
 
-// Strip "Sources:" / "来源:" section at the bottom of text
+// Strip various "Sources" section patterns at the bottom of text
 function stripSourcesSection(text: string): string {
-  return text
-    .replace(/\n+---\s*\n+\*?\*?Sources:?\*?\*?[\s\S]*$/i, '')
-    .replace(/\n+\*?\*?Sources:?\*?\*?\s*\n[\s\S]*$/i, '')
-    .replace(/\n+\*?\*?来源:?\*?\*?\s*\n[\s\S]*$/i, '')
-    .trim()
+  // Match common source/reference list patterns in both English and Chinese
+  const patterns = [
+    /\n+---\s*\n+\*?\*?(?:Sources?|References?|参考来源|来源|引用|参考资料|出处):?\*?\*?[\s\S]*$/i,
+    /\n+\*?\*?(?:Sources?|References?|参考来源|来源|引用|参考资料|出处):?\*?\*?\s*\n[\s\S]*$/i,
+    /\n+#{1,3}\s*(?:Sources?|References?|参考来源|来源|引用)\s*\n[\s\S]*$/i,
+    // Numbered source lists: "\n1. [Name](url)" or "\n- [Name](url)" at the end
+    /\n+(?:\d+\.\s*\[.+?\]\(.+?\)\s*\n?){2,}$/,
+    /\n+(?:-\s*\[.+?\]\(.+?\)\s*\n?){2,}$/,
+  ]
+  let result = text
+  for (const pattern of patterns) {
+    result = result.replace(pattern, '')
+  }
+  return result.trim()
 }
 
 export function TextBlock({ block, citations = [] }: Props) {

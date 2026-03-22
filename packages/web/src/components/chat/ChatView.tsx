@@ -11,6 +11,7 @@ import type { StreamEvent } from '../../types/stream'
 interface Props {
   messages: Message[]
   model: ModelOption
+  customAgents?: Record<string, { description: string; prompt?: string; tools?: string[] }>
   onAddMessage: (msg: Message) => void
   onUpdateLastMessage: (msg: Message) => void
   onModelChange: (model: ModelOption) => void
@@ -20,7 +21,7 @@ interface Props {
 }
 
 export function ChatView({
-  messages, model, onAddMessage, onUpdateLastMessage, onModelChange,
+  messages, model, customAgents, onAddMessage, onUpdateLastMessage, onModelChange,
   onEnsureConversation, onToggleThinking, onShowToast,
 }: Props) {
   const { startStream, stopStream } = useSSEStream()
@@ -81,6 +82,7 @@ export function ChatView({
       thinkingBudget: 10000,
       useAgent: model.useAgent,
       agentSessionId: agentSessionRef.current || undefined,
+      customAgents,
       onEvent: (event: StreamEvent | any) => {
         const isAgent = model.useAgent
 
@@ -140,6 +142,18 @@ export function ChatView({
 
           case 'tool_result':
             dispatch({ type: 'TOOL_RESULT', toolId: event.tool_use_id, toolName: event.tool_name, content: event.content })
+            break
+
+          case 'task_started':
+            dispatch({ type: 'TASK_STARTED', toolUseId: event.tool_use_id })
+            break
+
+          case 'task_progress':
+            dispatch({ type: 'TASK_PROGRESS', toolUseId: event.tool_use_id, toolUseCount: event.tool_use_count, durationMs: event.duration_ms, summary: event.summary })
+            break
+
+          case 'task_notification':
+            dispatch({ type: 'TASK_NOTIFICATION', toolUseId: event.tool_use_id })
             break
         }
       },

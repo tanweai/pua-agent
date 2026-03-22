@@ -4,11 +4,12 @@ import { SearchCard } from './SearchCard'
 import { FetchCard } from './FetchCard'
 import { CodeExecCard } from './CodeExecCard'
 import { SubagentCard } from './SubagentCard'
-import type { ToolUseBlock, ToolResultBlock } from '../../types/message'
+import type { ToolUseBlock, ToolResultBlock, TaskProgress } from '../../types/message'
 
 interface Props {
   block: ToolUseBlock
   result?: ToolResultBlock
+  progress?: TaskProgress
 }
 
 // Map tool names to icons
@@ -22,12 +23,12 @@ function getToolIcon(name: string) {
   }
 }
 
-export function ToolUseCard({ block, result }: Props) {
+export function ToolUseCard({ block, result, progress }: Props) {
   const name = block.toolName.toLowerCase()
 
   // Agent/Task — subagent invocation
   if (name === 'agent' || name === 'task') {
-    return <SubagentCard block={block} result={result} />
+    return <SubagentCard block={block} result={result} progress={progress} />
   }
 
   // WebSearch

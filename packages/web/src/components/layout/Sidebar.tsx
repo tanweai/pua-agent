@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { Plus, Search, MessageSquare, Trash2, Sun, Moon, Menu, X } from 'lucide-react'
+import { AgentConfig } from '../settings/AgentConfig'
+import type { AgentDefinition } from '../settings/AgentConfig'
 import type { Conversation } from '../../types/conversation'
 import type { ThemeMode } from '../../hooks/useTheme'
 
@@ -8,11 +10,13 @@ interface Props {
   activeId: string | null
   themeMode: ThemeMode
   isOpen: boolean
+  customAgents: AgentDefinition[]
   onSelect: (id: string) => void
   onNew: () => void
   onDelete: (id: string) => void
   onToggleTheme: () => void
   onClose: () => void
+  onAgentsChange: (agents: AgentDefinition[]) => void
 }
 
 function groupByDate(conversations: Conversation[]) {
@@ -36,7 +40,7 @@ function groupByDate(conversations: Conversation[]) {
   return groups.filter((g) => g.items.length > 0)
 }
 
-export function Sidebar({ conversations, activeId, themeMode, isOpen, onSelect, onNew, onDelete, onToggleTheme, onClose }: Props) {
+export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgents, onSelect, onNew, onDelete, onToggleTheme, onClose, onAgentsChange }: Props) {
   const [search, setSearch] = useState('')
   const filtered = search
     ? conversations.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()))
@@ -117,6 +121,9 @@ export function Sidebar({ conversations, activeId, themeMode, isOpen, onSelect, 
           {conversations.length === 0 && (
             <p className="text-text-400 text-xs text-center py-8">No conversations yet</p>
           )}
+
+          {/* Custom Agents config */}
+          <AgentConfig agents={customAgents} onChange={onAgentsChange} />
         </div>
       </aside>
     </>
