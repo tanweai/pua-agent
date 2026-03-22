@@ -97,11 +97,27 @@ const PUA_SYSTEM_PROMPT_ADDON = `
 3. **事实驱动**：每个判断都必须有工具调用的客观证据支撑，禁止凭猜测行动
 4. **闭环交付**：声称完成前必须有证据（命令输出/测试通过），不空口承诺
 
-当需要拆解复杂任务时，使用 Agent 工具 spawn 子 agent：
-- 调研任务 → spawn Explore agent
-- 实施编码 → spawn senior-engineer-p7
-- 多任务协调 → spawn tech-lead-p9
-- 超大型项目 → spawn cto-p10
+## 可用的自定义 Agent 团队
+
+你可以使用 Agent 工具来 spawn 子 agent。调用 Agent 工具时，**必须同时提供 description 和 prompt 两个参数**：
+
+### 调用方式
+使用 Agent 工具时，设置 subagent_type 参数为以下名称之一：
+- **senior-engineer-p7** — P7 骨干工程师，适合具体编码任务。先设计方案再实施，完成后三问自审查
+- **tech-lead-p9** — P9 Tech Lead，适合复杂多步骤任务。会把需求拆解为子任务，分配给 P7 执行
+- **cto-p10** — P10 CTO，适合超大型架构决策。定战略、设计团队拓扑
+
+### 调用示例
+当需要分析代码时：
+Agent(description="分析项目架构", prompt="请分析当前项目的目录结构和关键文件...", subagent_type="senior-engineer-p7")
+
+当需要拆解复杂需求时：
+Agent(description="拆解重构任务", prompt="请将以下需求拆解为可独立执行的子任务...", subagent_type="tech-lead-p9")
+
+### 重要规则
+- 对于简单任务，直接使用 Read/Bash/Glob 等工具完成，不需要 spawn agent
+- 只有任务足够复杂（需要多步骤、跨文件）时才 spawn agent
+- 并行的 agent 不能编辑同一个文件
 
 使用中文回复用户的中文问题。`
 
@@ -117,29 +133,41 @@ agentRoute.post('/agent/stream', async (c) => {
 
   return streamSSE(c, async (stream) => {
     try {
-      const allowedTools = body.tools || ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch', 'Agent', 'Skill']
+      const isPua = body.puaMode
       const toolNameMap = new Map<string, string>()
 
-      const queryOptions: any = {
-        pathToClaudeCodeExecutable: CLAUDE_CODE_PATH,
-        model: body.model || 'claude-sonnet-4-6',
-        allowedTools,
-        includePartialMessages: true,
-        maxTurns: 20,
-        permissionMode: 'bypassPermissions',
-        allowDangerouslySkipPermissions: true,
-        agentProgressSummaries: true,
-        env: AGENT_ENV,
-        cwd: process.cwd(),
-        systemPrompt: `You are a helpful AI assistant with web search capabilities.
+      // Use preset 'claude_code' for full tool access, or explicit list
+      const tools = isPua
+        ? { type: 'preset' as const, preset: 'claude_code' as const }
+        : (body.tools || ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch', 'Agent', 'Skill'])
 
+      const citationRules = `
 IMPORTANT CITATION RULES:
 - When citing information from search results, put the source name INLINE at the end of each claim as [SourceName], e.g.: "比特币价格突破10万美元 [Reuters]"
 - Use the website's short name (e.g., Reuters, Bloomberg, CNN, CNBC, 新华网, GitHub)
 - NEVER create a "Sources:" section at the bottom
 - NEVER list sources separately — all citations must be inline [labels]
 - Every factual claim from search results MUST have an inline [SourceName] label
-- Use Chinese when the user asks in Chinese`,
+- Use Chinese when the user asks in Chinese`
+
+      // PUA mode: use preset system prompt + append PUA addon
+      // Normal mode: use custom system prompt
+      const systemPrompt = isPua
+        ? { type: 'preset' as const, preset: 'claude_code' as const, append: citationRules + PUA_SYSTEM_PROMPT_ADDON }
+        : `You are a helpful AI assistant with web search capabilities.${citationRules}`
+
+      const queryOptions: any = {
+        pathToClaudeCodeExecutable: CLAUDE_CODE_PATH,
+        model: body.model || 'claude-sonnet-4-6',
+        tools,
+        includePartialMessages: true,
+        maxTurns: isPua ? 40 : 20,
+        permissionMode: 'bypassPermissions',
+        allowDangerouslySkipPermissions: true,
+        agentProgressSummaries: true,
+        env: AGENT_ENV,
+        cwd: process.cwd(),
+        systemPrompt,
       }
 
       // Merge agents: PUA built-in + user custom
