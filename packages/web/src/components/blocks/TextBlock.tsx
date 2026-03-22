@@ -19,6 +19,8 @@ function stripSourcesSection(text: string): string {
     // Numbered source lists: "\n1. [Name](url)" or "\n- [Name](url)" at the end
     /\n+(?:\d+\.\s*\[.+?\]\(.+?\)\s*\n?){2,}$/,
     /\n+(?:-\s*\[.+?\]\(.+?\)\s*\n?){2,}$/,
+    // "数据来源：" / "Data sources:" inline at end
+    /\n+\*?\*?(?:数据来源|资料来源|信息来源|Data\s*sources?):?\*?\*?[：:].{0,200}$/i,
   ]
   let result = text
   for (const pattern of patterns) {

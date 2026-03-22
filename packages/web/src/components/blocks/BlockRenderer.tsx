@@ -60,7 +60,7 @@ export function BlockRenderer({ blocks, toolResults, taskProgress, onToggleThink
                 />
               )
             }
-            return <ToolUseCard key={index} block={block} result={toolResults[block.toolId]} progress={taskProgress?.[block.toolId]} />
+            return <ToolUseCard key={index} block={block} result={toolResults[block.toolId]} progress={taskProgress?.[block.toolId]} onSendPrompt={onSendPrompt} />
           }
           default:
             return null

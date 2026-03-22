@@ -1,73 +1,92 @@
-import { Wrench, FileText, Terminal, FolderSearch, Search as SearchIcon } from 'lucide-react'
+import { Wrench, FileText, Terminal, FolderSearch, Search as SearchIcon, Send } from 'lucide-react'
 import { Spinner } from '../ui/Spinner'
 import { SearchCard } from './SearchCard'
 import { FetchCard } from './FetchCard'
 import { CodeExecCard } from './CodeExecCard'
 import { SubagentCard } from './SubagentCard'
+import { TaskCard } from './TaskCard'
+import { AskUserCard } from './AskUserCard'
+import { TeamCard } from './TeamCard'
+import { FileEditCard } from './FileEditCard'
+import { SkillCard } from './SkillCard'
 import type { ToolUseBlock, ToolResultBlock, TaskProgress } from '../../types/message'
 
 interface Props {
   block: ToolUseBlock
   result?: ToolResultBlock
   progress?: TaskProgress
+  onSendPrompt?: (text: string) => void
 }
 
-// Map tool names to icons
+// Map tool names to icons for compact display
 function getToolIcon(name: string) {
   switch (name.toLowerCase()) {
     case 'read': return FileText
     case 'bash': return Terminal
     case 'glob': case 'grep': return FolderSearch
-    case 'skill': return SearchIcon
+    case 'sendmessage': return Send
     default: return Wrench
   }
 }
 
-export function ToolUseCard({ block, result, progress }: Props) {
+export function ToolUseCard({ block, result, progress, onSendPrompt }: Props) {
   const name = block.toolName.toLowerCase()
 
-  // Agent/Task — subagent invocation
-  if (name === 'agent' || name === 'task') {
+  // === Agent/Task — subagent invocation ===
+  if (name === 'agent') {
     return <SubagentCard block={block} result={result} progress={progress} />
   }
 
-  // WebSearch
+  // === WebSearch ===
   if (name === 'web_search' || name === 'websearch') {
     return <SearchCard block={block} result={result} />
   }
 
-  // WebFetch
+  // === WebFetch ===
   if (name === 'web_fetch' || name === 'webfetch') {
     return <FetchCard block={block} />
   }
 
-  // Code execution
+  // === Code execution ===
   if (name === 'code_execution') {
     return <CodeExecCard block={block} result={result} />
   }
 
-  // Skill invocation
-  if (name === 'skill') {
-    return (
-      <div className="my-2 flex items-center gap-2 px-1">
-        {block.status !== 'done' ? (
-          <Spinner size={14} className="text-accent-100" />
-        ) : (
-          <SearchIcon size={14} className="text-success" />
-        )}
-        <span className="text-[13px] text-text-300">
-          Skill: {block.input?.skill_name || block.input?.name || 'unknown'}
-        </span>
-      </div>
-    )
+  // === TaskCreate / TaskUpdate / TaskList / TaskGet ===
+  if (name === 'taskcreate' || name === 'taskupdate' || name === 'tasklist' || name === 'taskget') {
+    return <TaskCard block={block} result={result} />
   }
 
-  // Generic tool — compact display for Read, Bash, Glob, Grep, etc.
+  // === AskUserQuestion ===
+  if (name === 'askuserquestion') {
+    return <AskUserCard block={block} result={result} onSendPrompt={onSendPrompt} />
+  }
+
+  // === TeamCreate / TeamDelete ===
+  if (name === 'teamcreate' || name === 'teamdelete') {
+    return <TeamCard block={block} result={result} />
+  }
+
+  // === Edit / Write — file operations ===
+  if (name === 'edit' || name === 'write') {
+    return <FileEditCard block={block} result={result} />
+  }
+
+  // === Skill ===
+  if (name === 'skill') {
+    return <SkillCard block={block} result={result} />
+  }
+
+  // === Generic compact display for Read, Bash, Glob, Grep, SendMessage, etc. ===
   const Icon = getToolIcon(block.toolName)
-  const inputPreview = block.input?.file_path || block.input?.command?.slice(0, 60) || block.input?.pattern || ''
+  const inputPreview = block.input?.file_path
+    || block.input?.command?.slice(0, 60)
+    || block.input?.pattern
+    || block.input?.to
+    || ''
 
   return (
-    <div className="my-1 flex items-center gap-2 px-1">
+    <div className="my-1 flex items-center gap-2 px-1 tool-card-enter">
       {block.status !== 'done' ? (
         <Spinner size={14} className="text-text-400" />
       ) : (

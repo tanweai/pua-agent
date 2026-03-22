@@ -276,6 +276,13 @@
   opacity: 1; transform: translateY(0); pointer-events: auto;
 }
 
+/* ========== Tool Card Enter ========== */
+@keyframes tool-card-enter {
+  from { opacity: 0; transform: translateY(6px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.tool-card-enter { animation: tool-card-enter 250ms var(--ease-out-expo); }
+
 /* ========== Progress Indeterminate ========== */
 @keyframes progress-indeterminate {
   0% { width: 0%; margin-left: 0; }
