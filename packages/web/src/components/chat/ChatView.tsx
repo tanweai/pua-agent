@@ -73,16 +73,24 @@ export function ChatView({
     const userMsg: Message = {
       id: crypto.randomUUID(),
       role: 'user',
-      content: finalContent,
+      content,  // Display original text (no image paths) in UI
       blocks: [],
       toolResults: {},
       isStreaming: false,
       createdAt: Date.now(),
+      attachments: uploadedPaths.length > 0
+        ? uploadedPaths.map((p, i) => ({ id: `img-${i}`, name: images![i].name, type: images![i].type, size: 0 }))
+        : undefined,
     }
     onAddMessage(userMsg)
 
+    // For API: use finalContent which includes image paths
     const apiMessages = [...messages, userMsg].map((m) => {
-      if (m.role === 'user') return { role: 'user' as const, content: m.content || '' }
+      if (m.role === 'user') {
+        // Use finalContent for the latest user message (with image paths)
+        if (m.id === userMsg.id) return { role: 'user' as const, content: finalContent }
+        return { role: 'user' as const, content: m.content || '' }
+      }
       const c: any[] = m.blocks
         .filter((b) => b.type === 'text' || b.type === 'thinking')
         .map((b) => {

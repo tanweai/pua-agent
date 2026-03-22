@@ -12,7 +12,7 @@ interface Props {
   onToggleThinking: (messageIndex: number, blockIndex: number) => void
   onQuickAction?: (text: string) => void
   onShowToast?: (msg: string) => void
-  onSendPrompt?: (text: string) => void
+  onSendPrompt?: (text: string, images?: { name: string; type: string; data: string }[]) => void
   onModelChange?: (model: ModelOption) => void
 }
 

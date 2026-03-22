@@ -18,7 +18,7 @@ interface UploadedFile {
 
 interface Props {
   model: ModelOption
-  onSend: (content: string) => void
+  onSend: (content: string, images?: { name: string; type: string; data: string }[]) => void
   onModelChange: (model: ModelOption) => void
   onShowToast?: (msg: string, type?: 'success' | 'error' | 'info') => void
 }
@@ -62,10 +62,13 @@ export function EmptyState({ model, onSend, onModelChange, onShowToast }: Props)
   const handleSubmit = useCallback(() => {
     const trimmed = input.trim()
     if (!trimmed) return
-    onSend(trimmed)
+    const imageFiles = files
+      .filter(f => f.type.startsWith('image/'))
+      .map(f => ({ name: f.name, type: f.type, data: f.content }))
+    onSend(trimmed, imageFiles.length > 0 ? imageFiles : undefined)
     setInput('')
     setFiles([])
-  }, [input, onSend])
+  }, [input, files, onSend])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
