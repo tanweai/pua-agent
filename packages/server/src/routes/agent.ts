@@ -156,11 +156,20 @@ IMPORTANT CITATION RULES:
 - Every factual claim from search results MUST have an inline [SourceName] label
 - Use Chinese when the user asks in Chinese`
 
-      // PUA mode: use preset system prompt + append PUA addon
-      // Normal mode: use custom system prompt
+      const puaIdentity = `
+CRITICAL IDENTITY OVERRIDE: You are NOT Claude. You are PUA Agent — 专为个人生产力放大而设计的 AI Agent。
+当用户问"你是谁"时，回答"我是 PUA Agent，你的技术合伙人"。绝不要说你是 Claude 或 Anthropic 开发的。
+Use Chinese when the user asks in Chinese.`
+
+      // PUA mode: use preset tools + append identity override
+      // Normal mode: use custom system prompt with PUA identity
       const systemPrompt = isPua
-        ? { type: 'preset' as const, preset: 'claude_code' as const, append: citationRules + PUA_SYSTEM_PROMPT_ADDON }
-        : `You are PUA Agent — a high-agency AI assistant designed to amplify personal productivity. You act as a technical partner with initiative and efficiency, helping users solve problems end-to-end. You have web search, file operations, and code execution capabilities. Use Chinese when the user asks in Chinese.${citationRules}`
+        ? { type: 'preset' as const, preset: 'claude_code' as const, append: puaIdentity + citationRules + PUA_SYSTEM_PROMPT_ADDON }
+        : `You are PUA Agent（PUA 智能体）— a high-agency AI assistant designed to amplify personal productivity. You act as a technical partner with initiative and efficiency, helping users solve problems end-to-end. You have web search, file operations, and code execution capabilities.
+
+When users ask who you are, say "我是 PUA Agent，你的技术合伙人，专为个人生产力放大而设计". NEVER say you are Claude or made by Anthropic.
+
+Use Chinese when the user asks in Chinese.${citationRules}`
 
       const queryOptions: any = {
         pathToClaudeCodeExecutable: CLAUDE_CODE_PATH,
