@@ -16,10 +16,16 @@ export function ReadCard({ block, result }: Props) {
   const fileName = filePath.split('/').pop() || filePath
 
   const resultContent = result?.content
-  const fileContent = typeof resultContent === 'string'
-    ? resultContent
-    : resultContent?.content || resultContent?.text || (resultContent ? JSON.stringify(resultContent) : '')
-  const hasContent = fileContent && fileContent.length > 0
+  let fileContent = ''
+  if (typeof resultContent === 'string') {
+    fileContent = resultContent
+  } else if (resultContent?.content) {
+    fileContent = resultContent.content
+  } else if (resultContent?.text) {
+    fileContent = resultContent.text
+  }
+  // Don't show empty/meaningless results like {"results":[]}
+  const hasContent = fileContent.length > 0 && fileContent !== '{"results":[]}' && fileContent !== '{}'
   const lineCount = hasContent ? fileContent.split('\n').length : 0
 
   return (

@@ -17,10 +17,16 @@ export function BashCard({ block, result }: Props) {
 
   // Parse result content
   const resultContent = result?.content
-  const stdout = typeof resultContent === 'string'
-    ? resultContent
-    : resultContent?.stdout || resultContent?.output || (resultContent ? JSON.stringify(resultContent) : '')
-  const hasOutput = stdout && stdout.length > 0
+  let stdout = ''
+  if (typeof resultContent === 'string') {
+    stdout = resultContent
+  } else if (resultContent?.stdout) {
+    stdout = resultContent.stdout
+  } else if (resultContent?.output) {
+    stdout = resultContent.output
+  }
+  // Filter out empty/meaningless results
+  const hasOutput = stdout.length > 0 && stdout !== '{"results":[]}' && stdout !== '{}'
   const exitCode = resultContent?.exit_code ?? resultContent?.exitCode
   const isError = exitCode != null && exitCode !== 0
 
