@@ -42,13 +42,23 @@ export function InputArea({ isStreaming, model, puaMode, onSend, onStop, onModel
 
   const addFiles = useCallback(async (rawFiles: File[]) => {
     for (const f of rawFiles) {
-      const text = await f.text()
+      let content: string
+      if (f.type.startsWith('image/')) {
+        // Images: read as data URL (safe for display)
+        content = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.readAsDataURL(f)
+        })
+      } else {
+        content = await f.text()
+      }
       setFiles((prev) => [...prev, {
         id: crypto.randomUUID(),
         name: f.name,
         size: f.size,
         type: f.type,
-        content: text,
+        content,
       }])
     }
   }, [])

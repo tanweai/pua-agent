@@ -83,13 +83,22 @@ export function EmptyState({ model, onSend, onModelChange, onShowToast }: Props)
 
   const addFiles = useCallback(async (rawFiles: File[]) => {
     for (const f of rawFiles) {
-      const text = await f.text()
+      let content: string
+      if (f.type.startsWith('image/')) {
+        content = await new Promise<string>((resolve) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.readAsDataURL(f)
+        })
+      } else {
+        content = await f.text()
+      }
       setFiles((prev) => [...prev, {
         id: crypto.randomUUID(),
         name: f.name,
         size: f.size,
         type: f.type,
-        content: text,
+        content,
       }])
     }
     onShowToast?.(`File(s) added`, 'success')
