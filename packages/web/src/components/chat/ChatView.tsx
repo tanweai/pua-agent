@@ -73,7 +73,7 @@ export function ChatView({
     const userMsg: Message = {
       id: crypto.randomUUID(),
       role: 'user',
-      content,
+      content: finalContent,
       blocks: [],
       toolResults: {},
       isStreaming: false,
