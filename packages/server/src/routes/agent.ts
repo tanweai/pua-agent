@@ -190,6 +190,7 @@ IMPORTANT CITATION RULES:
 
       // PUA mode: prepend /pua to activate the skill
       const finalPrompt = isPua ? `/pua ${body.prompt}` : body.prompt
+      console.log(`[Agent] Prompt (${finalPrompt.length} chars): ${finalPrompt.slice(0, 200)}...`)
 
       for await (const message of query({ prompt: finalPrompt, options: queryOptions })) {
         const msg = message as any
