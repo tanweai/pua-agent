@@ -52,7 +52,6 @@ agentRoute.post('/agent/stream', async (c) => {
         maxTurns: 20,
         permissionMode: 'bypassPermissions',
         allowDangerouslySkipPermissions: true,
-        settingSources: ['userSettings'],  // Load PUA skill + other user plugins
         env: AGENT_ENV,
         cwd: process.cwd(),
       }
