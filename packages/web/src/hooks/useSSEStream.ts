@@ -9,6 +9,7 @@ interface StreamOptions {
   useAgent?: boolean
   agentSessionId?: string  // For multi-turn resume
   customAgents?: Record<string, { description: string; prompt?: string; tools?: string[] }>
+  puaMode?: boolean
   onEvent: (event: StreamEvent | any) => void
   onError: (error: Error) => void
   onComplete: () => void
@@ -37,6 +38,7 @@ export function useSSEStream() {
           tools: ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch', 'Agent', 'Skill'],
           ...(options.agentSessionId && { sessionId: options.agentSessionId }),
           ...(options.customAgents && Object.keys(options.customAgents).length > 0 && { agents: options.customAgents }),
+          ...(options.puaMode && { puaMode: true }),
         }
       : {
           model: options.model,

@@ -17,6 +17,9 @@ export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [activeArtifact, setActiveArtifact] = useState<ArtifactFile | null>(null)
+  const [puaMode, setPuaMode] = useState(() => {
+    try { return localStorage.getItem('pua-mode') === 'true' } catch { return false }
+  })
 
   const { mode, toggle: toggleTheme } = useTheme()
   const { toasts, show: showToast, dismiss: dismissToast } = useToast()
@@ -67,12 +70,14 @@ export function Layout() {
         themeMode={mode}
         isOpen={sidebarOpen}
         customAgents={customAgents}
+        puaMode={puaMode}
         onSelect={(id) => { selectConversation(id); setSidebarOpen(false) }}
         onNew={handleNew}
         onDelete={deleteConversation}
         onToggleTheme={toggleTheme}
         onClose={() => setSidebarOpen(false)}
         onAgentsChange={updateAgents}
+        onPuaModeChange={(v) => { setPuaMode(v); localStorage.setItem('pua-mode', String(v)) }}
       />
 
       <FileDropZone onDrop={handleFileDrop}>
@@ -90,6 +95,7 @@ export function Layout() {
               messages={messages}
               model={model}
               customAgents={agentSdkConfig}
+              puaMode={puaMode}
               onAddMessage={addMessage}
               onUpdateLastMessage={updateLastMessage}
               onModelChange={setModel}

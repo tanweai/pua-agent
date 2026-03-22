@@ -12,6 +12,7 @@ interface Props {
   messages: Message[]
   model: ModelOption
   customAgents?: Record<string, { description: string; prompt?: string; tools?: string[] }>
+  puaMode?: boolean
   onAddMessage: (msg: Message) => void
   onUpdateLastMessage: (msg: Message) => void
   onModelChange: (model: ModelOption) => void
@@ -21,7 +22,7 @@ interface Props {
 }
 
 export function ChatView({
-  messages, model, customAgents, onAddMessage, onUpdateLastMessage, onModelChange,
+  messages, model, customAgents, puaMode, onAddMessage, onUpdateLastMessage, onModelChange,
   onEnsureConversation, onToggleThinking, onShowToast,
 }: Props) {
   const { startStream, stopStream } = useSSEStream()
@@ -83,6 +84,7 @@ export function ChatView({
       useAgent: model.useAgent,
       agentSessionId: agentSessionRef.current || undefined,
       customAgents,
+      puaMode,
       onEvent: (event: StreamEvent | any) => {
         const isAgent = model.useAgent
 

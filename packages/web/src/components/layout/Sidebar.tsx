@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search, MessageSquare, Trash2, Sun, Moon, Menu, X } from 'lucide-react'
+import { Plus, Search, MessageSquare, Trash2, Sun, Moon, Menu, X, Flame } from 'lucide-react'
 import { AgentConfig } from '../settings/AgentConfig'
 import type { AgentDefinition } from '../settings/AgentConfig'
 import type { Conversation } from '../../types/conversation'
@@ -11,12 +11,14 @@ interface Props {
   themeMode: ThemeMode
   isOpen: boolean
   customAgents: AgentDefinition[]
+  puaMode: boolean
   onSelect: (id: string) => void
   onNew: () => void
   onDelete: (id: string) => void
   onToggleTheme: () => void
   onClose: () => void
   onAgentsChange: (agents: AgentDefinition[]) => void
+  onPuaModeChange: (enabled: boolean) => void
 }
 
 function groupByDate(conversations: Conversation[]) {
@@ -40,7 +42,7 @@ function groupByDate(conversations: Conversation[]) {
   return groups.filter((g) => g.items.length > 0)
 }
 
-export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgents, onSelect, onNew, onDelete, onToggleTheme, onClose, onAgentsChange }: Props) {
+export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgents, puaMode, onSelect, onNew, onDelete, onToggleTheme, onClose, onAgentsChange, onPuaModeChange }: Props) {
   const [search, setSearch] = useState('')
   const filtered = search
     ? conversations.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()))
@@ -121,6 +123,26 @@ export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgen
           {conversations.length === 0 && (
             <p className="text-text-400 text-xs text-center py-8">No conversations yet</p>
           )}
+
+          {/* PUA Mode toggle */}
+          <div className="border-t border-border-100 mt-2 pt-2">
+            <div
+              className="flex items-center gap-2 px-3 py-1.5 cursor-pointer hover:bg-bg-300/60 rounded-lg transition-colors"
+              onClick={() => onPuaModeChange(!puaMode)}
+            >
+              <Flame size={14} className={puaMode ? 'text-orange-500' : 'text-text-400'} />
+              <span className={`text-[12px] font-medium ${puaMode ? 'text-orange-500' : 'text-text-300'}`}>
+                PUA Mode
+              </span>
+              <div className="flex-1" />
+              <div className={`w-8 h-4 rounded-full transition-colors ${puaMode ? 'bg-orange-500' : 'bg-bg-300'}`}>
+                <div className={`w-3.5 h-3.5 rounded-full bg-white shadow-sm transition-transform mt-[1px] ${puaMode ? 'translate-x-[17px]' : 'translate-x-[1px]'}`} />
+              </div>
+            </div>
+            {puaMode && (
+              <p className="text-[10px] text-orange-500/70 px-3 py-1">P7/P9/P10 Agent Team enabled</p>
+            )}
+          </div>
 
           {/* Custom Agents config */}
           <AgentConfig agents={customAgents} onChange={onAgentsChange} />
