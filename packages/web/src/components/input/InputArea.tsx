@@ -28,6 +28,7 @@ interface Props {
 export function InputArea({ isStreaming, model, onSend, onStop, onModelChange, prefill, onClearPrefill, onShowToast }: Props) {
   const [input, setInput] = useState('')
   const [files, setFiles] = useState<UploadedFile[]>([])
+  const [effort, setEffort] = useState('high')
   const { ref: textareaRef, resize } = useAutoResize(300)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -138,7 +139,8 @@ export function InputArea({ isStreaming, model, onSend, onStop, onModelChange, p
             <div className="flex items-center gap-2">
               {model.useAgent && (
                 <select
-                  value="high"
+                  value={effort}
+                  onChange={(e) => setEffort(e.target.value)}
                   className="text-[11px] bg-bg-200 border border-border-200 rounded-lg px-1.5 py-1 text-text-300 outline-none cursor-pointer"
                   title="Effort level"
                 >
