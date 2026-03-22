@@ -174,8 +174,7 @@ IMPORTANT CITATION RULES:
       const mergedAgents: Record<string, any> = {}
       if (body.puaMode) {
         Object.assign(mergedAgents, PUA_AGENTS)
-        queryOptions.systemPrompt += PUA_SYSTEM_PROMPT_ADDON
-        console.log('[Agent] PUA mode enabled — P7/P9/P10 agents injected')
+        console.log('[Agent] PUA mode enabled — P7/P9/P10 agents injected, prompt prefixed with /pua')
       }
       if (body.agents) {
         Object.assign(mergedAgents, body.agents)
@@ -189,7 +188,10 @@ IMPORTANT CITATION RULES:
         console.log(`[Agent] Resuming: ${body.sessionId}`)
       }
 
-      for await (const message of query({ prompt: body.prompt, options: queryOptions })) {
+      // PUA mode: prepend /pua to activate the skill
+      const finalPrompt = isPua ? `/pua ${body.prompt}` : body.prompt
+
+      for await (const message of query({ prompt: finalPrompt, options: queryOptions })) {
         const msg = message as any
 
         // === stream_event: native Anthropic SSE — pass through directly ===

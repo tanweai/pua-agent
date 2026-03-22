@@ -1,8 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Send, Square, Plus } from 'lucide-react'
+import { Send, Square, Plus, Flame } from 'lucide-react'
 import { ModelSelector } from './ModelSelector'
 import { FileChip } from './FileChip'
-import { SkillChips } from './SkillChips'
 import { useAutoResize } from '../../hooks/useAutoResize'
 import type { ModelOption } from '../../types/conversation'
 
@@ -17,22 +16,22 @@ interface UploadedFile {
 interface Props {
   isStreaming: boolean
   model: ModelOption
+  puaMode?: boolean
   onSend: (content: string) => void
   onStop: () => void
   onModelChange: (model: ModelOption) => void
+  onPuaModeChange?: (enabled: boolean) => void
   prefill?: string
   onClearPrefill?: () => void
   onShowToast?: (msg: string, type?: 'success' | 'error' | 'info') => void
 }
 
-export function InputArea({ isStreaming, model, onSend, onStop, onModelChange, prefill, onClearPrefill, onShowToast }: Props) {
+export function InputArea({ isStreaming, model, puaMode, onSend, onStop, onModelChange, onPuaModeChange, prefill, onClearPrefill, onShowToast }: Props) {
   const [input, setInput] = useState('')
   const [files, setFiles] = useState<UploadedFile[]>([])
-  const [effort, setEffort] = useState('high')
   const { ref: textareaRef, resize } = useAutoResize(300)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Handle prefill from quick actions
   useEffect(() => {
     if (prefill) {
       setInput(prefill)
@@ -90,11 +89,6 @@ export function InputArea({ isStreaming, model, onSend, onStop, onModelChange, p
 
   const hasInput = input.trim().length > 0
 
-  const handleSkillSelect = useCallback((prompt: string) => {
-    setInput(prompt)
-    setTimeout(() => textareaRef.current?.focus(), 50)
-  }, [textareaRef])
-
   return (
     <div className="bg-bg-100 px-4 py-3">
       <div className="max-w-3xl mx-auto">
@@ -131,19 +125,20 @@ export function InputArea({ isStreaming, model, onSend, onStop, onModelChange, p
             </div>
 
             <div className="flex items-center gap-2">
-              {model.useAgent && (
-                <select
-                  value={effort}
-                  onChange={(e) => setEffort(e.target.value)}
-                  className="text-[11px] bg-bg-200 border border-border-200 rounded-lg px-1.5 py-1 text-text-300 outline-none cursor-pointer"
-                  title="Effort level"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Med</option>
-                  <option value="high">High</option>
-                  <option value="max">Max</option>
-                </select>
-              )}
+              {/* PUA toggle */}
+              <button
+                onClick={() => onPuaModeChange?.(!puaMode)}
+                className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-all ${
+                  puaMode
+                    ? 'bg-orange-500/10 text-orange-500 border border-orange-500/30'
+                    : 'text-text-400 hover:text-text-200 hover:bg-bg-200'
+                }`}
+                title={puaMode ? 'PUA Mode ON — click to disable' : 'Enable PUA Mode'}
+              >
+                <Flame size={12} />
+                PUA
+              </button>
+
               <ModelSelector selected={model} onChange={onModelChange} />
 
               {isStreaming ? (

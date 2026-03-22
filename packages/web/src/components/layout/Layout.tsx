@@ -99,6 +99,7 @@ export function Layout() {
               onAddMessage={addMessage}
               onUpdateLastMessage={updateLastMessage}
               onModelChange={setModel}
+              onPuaModeChange={(v) => { setPuaMode(v); localStorage.setItem('pua-mode', String(v)) }}
               onEnsureConversation={handleEnsureConversation}
               onToggleThinking={toggleThinkingBlock}
               onShowToast={handleShowToast}

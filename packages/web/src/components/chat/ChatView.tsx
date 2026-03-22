@@ -16,6 +16,7 @@ interface Props {
   onAddMessage: (msg: Message) => void
   onUpdateLastMessage: (msg: Message) => void
   onModelChange: (model: ModelOption) => void
+  onPuaModeChange?: (enabled: boolean) => void
   onEnsureConversation: () => void
   onToggleThinking: (messageIndex: number, blockIndex: number) => void
   onShowToast: (msg: string, type?: 'success' | 'error' | 'info') => void
@@ -23,7 +24,7 @@ interface Props {
 
 export function ChatView({
   messages, model, customAgents, puaMode, onAddMessage, onUpdateLastMessage, onModelChange,
-  onEnsureConversation, onToggleThinking, onShowToast,
+  onPuaModeChange, onEnsureConversation, onToggleThinking, onShowToast,
 }: Props) {
   const { startStream, stopStream } = useSSEStream()
   const { streamingMessage, dispatch, toggleThinking, reset } = useStreamReducer()
@@ -233,9 +234,11 @@ export function ChatView({
         <InputArea
           isStreaming={isStreaming}
           model={model}
+          puaMode={puaMode}
           onSend={handleSend}
           onStop={handleStop}
           onModelChange={onModelChange}
+          onPuaModeChange={onPuaModeChange}
           prefill={prefill}
           onClearPrefill={handleClearPrefill}
           onShowToast={onShowToast}
