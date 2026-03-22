@@ -188,9 +188,10 @@ IMPORTANT CITATION RULES:
         console.log(`[Agent] Resuming: ${body.sessionId}`)
       }
 
-      // PUA mode: prepend /pua to activate the skill
-      const finalPrompt = isPua ? `/pua ${body.prompt}` : body.prompt
-      console.log(`[Agent] Prompt (${finalPrompt.length} chars): ${finalPrompt.slice(0, 200)}...`)
+      // PUA behavior is injected via systemPrompt append + agents, NOT via /pua slash command
+      // (slash commands require full Claude Code CLI runtime which SDK doesn't provide)
+      const finalPrompt = body.prompt
+      console.log(`[Agent] Prompt (${finalPrompt.length} chars): ${finalPrompt.slice(0, 200)}${finalPrompt.length > 200 ? '...' : ''}`)
 
       for await (const message of query({ prompt: finalPrompt, options: queryOptions })) {
         const msg = message as any
