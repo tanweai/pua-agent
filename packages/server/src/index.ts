@@ -8,6 +8,7 @@ import { chatRoute } from './routes/chat.js'
 import { conversationsRoute } from './routes/conversations.js'
 import { uploadRoute } from './routes/upload.js'
 import { agentRoute } from './routes/agent.js'
+import { authRoute, verifyToken } from './routes/auth.js'
 
 function getLocalIP(): string {
   const nets = networkInterfaces()
@@ -24,6 +25,23 @@ const app = new Hono()
 app.use('*', logger())
 app.use('*', cors({ origin: '*' }))
 
+// Public routes (no auth required)
+app.route('/api', authRoute)
+
+// Auth guard for protected routes
+app.use('/api/agent/*', async (c, next) => {
+  const auth = c.req.header('Authorization')
+  if (!auth?.startsWith('Bearer ')) {
+    return c.json({ error: 'Unauthorized' }, 401)
+  }
+  const user = verifyToken(auth.slice(7))
+  if (!user) {
+    return c.json({ error: 'Token expired' }, 401)
+  }
+  await next()
+})
+
+// Protected routes
 app.route('/api', chatRoute)
 app.route('/api', agentRoute)
 app.route('/api', conversationsRoute)

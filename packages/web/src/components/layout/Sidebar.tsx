@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search, MessageSquare, Trash2, Sun, Moon, Menu, X, Flame, QrCode } from 'lucide-react'
+import { Plus, Search, MessageSquare, Trash2, Sun, Moon, Menu, X, Flame, QrCode, LogOut } from 'lucide-react'
 import { AgentConfig } from '../settings/AgentConfig'
 import type { AgentDefinition } from '../settings/AgentConfig'
 import type { Conversation } from '../../types/conversation'
@@ -20,6 +20,8 @@ interface Props {
   onAgentsChange: (agents: AgentDefinition[]) => void
   onPuaModeChange: (enabled: boolean) => void
   onQRConnect: () => void
+  username?: string | null
+  onLogout?: () => void
 }
 
 function groupByDate(conversations: Conversation[]) {
@@ -43,7 +45,7 @@ function groupByDate(conversations: Conversation[]) {
   return groups.filter((g) => g.items.length > 0)
 }
 
-export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgents, puaMode, onSelect, onNew, onDelete, onToggleTheme, onClose, onAgentsChange, onPuaModeChange, onQRConnect }: Props) {
+export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgents, puaMode, onSelect, onNew, onDelete, onToggleTheme, onClose, onAgentsChange, onPuaModeChange, onQRConnect, username, onLogout }: Props) {
   const [search, setSearch] = useState('')
   const filtered = search
     ? conversations.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()))
@@ -150,6 +152,20 @@ export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgen
 
           {/* Custom Agents config */}
           <AgentConfig agents={customAgents} onChange={onAgentsChange} />
+
+          {/* User info + Logout */}
+          {username && (
+            <div className="border-t border-border-100 mt-2 pt-2 px-3 py-2 flex items-center justify-between">
+              <span className="text-[12px] text-text-300 truncate">{username}</span>
+              <button
+                onClick={onLogout}
+                className="p-1 rounded-lg hover:bg-bg-300 text-text-400 hover:text-error transition-colors"
+                title="登出"
+              >
+                <LogOut size={14} />
+              </button>
+            </div>
+          )}
         </div>
       </aside>
     </>

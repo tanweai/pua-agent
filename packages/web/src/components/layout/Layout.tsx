@@ -14,7 +14,12 @@ import { useToast } from '../../hooks/useToast'
 import { useAgentConfig } from '../../hooks/useAgentConfig'
 import type { ArtifactFile } from '../../types/artifact'
 
-export function Layout() {
+interface LayoutProps {
+  username?: string | null
+  onLogout?: () => void
+}
+
+export function Layout({ username, onLogout }: LayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [activeArtifact, setActiveArtifact] = useState<ArtifactFile | null>(null)
@@ -81,6 +86,8 @@ export function Layout() {
         onAgentsChange={updateAgents}
         onPuaModeChange={(v) => { setPuaMode(v); localStorage.setItem('pua-mode', String(v)) }}
         onQRConnect={() => setQrOpen(true)}
+        username={username}
+        onLogout={onLogout}
       />
 
       <FileDropZone onDrop={handleFileDrop}>
