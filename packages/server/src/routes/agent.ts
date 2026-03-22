@@ -41,7 +41,7 @@ agentRoute.post('/agent/stream', async (c) => {
 
   return streamSSE(c, async (stream) => {
     try {
-      const allowedTools = body.tools || ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch']
+      const allowedTools = body.tools || ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch', 'Agent']
       const toolNameMap = new Map<string, string>()
 
       const queryOptions: any = {
