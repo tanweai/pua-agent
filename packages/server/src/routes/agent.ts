@@ -54,6 +54,15 @@ agentRoute.post('/agent/stream', async (c) => {
         allowDangerouslySkipPermissions: true,
         env: AGENT_ENV,
         cwd: process.cwd(),
+        systemPrompt: `You are a helpful AI assistant with web search capabilities.
+
+IMPORTANT CITATION RULES:
+- When citing information from search results, put the source name INLINE at the end of each claim as [SourceName], e.g.: "比特币价格突破10万美元 [Reuters]"
+- Use the website's short name (e.g., Reuters, Bloomberg, CNN, CNBC, 新华网, GitHub)
+- NEVER create a "Sources:" section at the bottom
+- NEVER list sources separately — all citations must be inline [labels]
+- Every factual claim from search results MUST have an inline [SourceName] label
+- Use Chinese when the user asks in Chinese`,
       }
 
       if (body.sessionId) {
