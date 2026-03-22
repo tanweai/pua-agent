@@ -48,10 +48,11 @@ agentRoute.post('/agent/stream', async (c) => {
         pathToClaudeCodeExecutable: CLAUDE_CODE_PATH,
         model: body.model || 'claude-sonnet-4-6',
         allowedTools,
-        includePartialMessages: true,  // KEY: enables native SSE stream events
+        includePartialMessages: true,
         maxTurns: 20,
         permissionMode: 'bypassPermissions',
         allowDangerouslySkipPermissions: true,
+        settingSources: ['userSettings'],  // Load PUA skill + other user plugins
         env: AGENT_ENV,
         cwd: process.cwd(),
       }
