@@ -9,7 +9,7 @@ export default defineConfig({
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
-        name: 'Claude Agent',
+        name: 'PUA Agent',
         short_name: 'Claude',
         description: 'AI Chat Agent',
         theme_color: '#ffffff',

@@ -90,7 +90,7 @@ export function Layout() {
             <button onClick={() => setSidebarOpen(true)} className="p-1.5 rounded-lg hover:bg-bg-200 text-text-300">
               <Menu size={20} />
             </button>
-            <span className="text-sm font-medium text-text-100 ml-2">Claude Agent</span>
+            <span className="text-sm font-medium text-text-100 ml-2">PUA Agent</span>
           </div>
 
           <div className="flex flex-1 min-h-0">
