@@ -44,9 +44,31 @@ export function ChatView({
     wasStreamingRef.current = isStreaming
   }, [isStreaming, streamingMessage, onAddMessage, reset])
 
-  const handleSend = useCallback((content: string) => {
+  const handleSend = useCallback(async (content: string, images?: { name: string; type: string; data: string }[]) => {
     setError(null)
     onEnsureConversation()
+
+    // If images attached, upload them to server and append paths to prompt
+    let finalContent = content
+    const uploadedPaths: string[] = []
+    if (images && images.length > 0) {
+      for (const img of images) {
+        try {
+          const res = await fetch('/api/upload/image', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: img.name, type: img.type, data: img.data }),
+          })
+          if (res.ok) {
+            const { path } = await res.json()
+            uploadedPaths.push(path)
+          }
+        } catch { /* skip failed uploads */ }
+      }
+      if (uploadedPaths.length > 0) {
+        finalContent += `\n\n[用户上传了 ${uploadedPaths.length} 张图片，文件路径: ${uploadedPaths.join(', ')}。请用 Read 工具查看图片。]`
+      }
+    }
 
     const userMsg: Message = {
       id: crypto.randomUUID(),
@@ -84,6 +106,7 @@ export function ChatView({
       thinkingBudget: 10000,
       useAgent: model.useAgent,
       agentSessionId: agentSessionRef.current || undefined,
+      agentPromptOverride: uploadedPaths.length > 0 ? finalContent : undefined,
       customAgents,
       puaMode,
       onEvent: (event: StreamEvent | any) => {

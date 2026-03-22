@@ -8,6 +8,7 @@ interface StreamOptions {
   thinkingBudget: number
   useAgent?: boolean
   agentSessionId?: string  // For multi-turn resume
+  agentPromptOverride?: string  // Override prompt for agent mode (e.g. with image paths)
   customAgents?: Record<string, { description: string; prompt?: string; tools?: string[] }>
   puaMode?: boolean
   onEvent: (event: StreamEvent | any) => void
@@ -26,10 +27,9 @@ export function useSSEStream() {
     const isAgent = options.useAgent
     const endpoint = isAgent ? '/api/agent/stream' : '/api/chat/stream'
 
-    // Agent mode: send only the latest user message as prompt
-    // Session resume handles context automatically
+    // Agent mode: use override prompt if available, otherwise extract from last user message
     const lastUserMsg = options.messages.filter(m => m.role === 'user').pop()
-    const prompt = typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : ''
+    const prompt = options.agentPromptOverride || (typeof lastUserMsg?.content === 'string' ? lastUserMsg.content : '')
 
     const body: any = isAgent
       ? {

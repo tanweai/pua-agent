@@ -17,7 +17,7 @@ interface Props {
   isStreaming: boolean
   model: ModelOption
   puaMode?: boolean
-  onSend: (content: string) => void
+  onSend: (content: string, images?: { name: string; type: string; data: string }[]) => void
   onStop: () => void
   onModelChange: (model: ModelOption) => void
   onPuaModeChange?: (enabled: boolean) => void
@@ -70,11 +70,14 @@ export function InputArea({ isStreaming, model, puaMode, onSend, onStop, onModel
   const handleSubmit = useCallback(() => {
     const trimmed = input.trim()
     if (!trimmed || isStreaming) return
-    onSend(trimmed)
+    const imageFiles = files
+      .filter(f => f.type.startsWith('image/'))
+      .map(f => ({ name: f.name, type: f.type, data: f.content }))
+    onSend(trimmed, imageFiles.length > 0 ? imageFiles : undefined)
     setInput('')
     setFiles([])
     if (textareaRef.current) textareaRef.current.style.height = 'auto'
-  }, [input, isStreaming, onSend, textareaRef])
+  }, [input, files, isStreaming, onSend, textareaRef])
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
