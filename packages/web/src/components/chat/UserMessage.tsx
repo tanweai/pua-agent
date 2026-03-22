@@ -8,7 +8,7 @@ interface Props {
 export function UserMessage({ message }: Props) {
   return (
     <div className="group message-enter">
-      <div className="max-w-3xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-4">
         <div className="relative rounded-2xl bg-bg-150 px-4 py-3">
           <p className="text-sm leading-relaxed text-text-100 whitespace-pre-wrap">
             {message.content}

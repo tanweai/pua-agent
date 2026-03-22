@@ -91,7 +91,7 @@ export function InputArea({ isStreaming, model, puaMode, onSend, onStop, onModel
 
   return (
     <div className="bg-bg-100 px-4 py-3">
-      <div className="max-w-3xl mx-auto">
+      <div className="max-w-4xl mx-auto">
         <div className="rounded-2xl border border-border-200 bg-bg-100 shadow-md">
           {files.length > 0 && (
             <div className="flex flex-wrap gap-2 px-4 pt-3">
@@ -109,7 +109,7 @@ export function InputArea({ isStreaming, model, puaMode, onSend, onStop, onModel
               onKeyDown={handleKeyDown}
               placeholder="Reply..."
               rows={1}
-              className="w-full bg-transparent resize-none outline-none text-sm text-text-100 placeholder:text-text-400 min-h-[44px] max-h-[300px] leading-relaxed"
+              className="w-full bg-transparent resize-none outline-none text-[15px] text-text-100 placeholder:text-text-400 min-h-[56px] max-h-[300px] leading-relaxed"
             />
           </div>
 

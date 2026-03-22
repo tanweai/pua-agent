@@ -31,7 +31,7 @@ export function AssistantMessage({ message, onToggleThinking, onShowToast, onSen
 
   return (
     <div className="message-enter">
-      <div className="max-w-3xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto px-4">
         <BlockRenderer
           blocks={message.blocks}
           toolResults={message.toolResults || {}}
