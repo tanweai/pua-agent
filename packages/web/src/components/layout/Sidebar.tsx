@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Plus, Search, MessageSquare, Trash2, Sun, Moon, Menu, X, Flame } from 'lucide-react'
+import { Plus, Search, MessageSquare, Trash2, Sun, Moon, Menu, X, Flame, QrCode } from 'lucide-react'
 import { AgentConfig } from '../settings/AgentConfig'
 import type { AgentDefinition } from '../settings/AgentConfig'
 import type { Conversation } from '../../types/conversation'
@@ -19,6 +19,7 @@ interface Props {
   onClose: () => void
   onAgentsChange: (agents: AgentDefinition[]) => void
   onPuaModeChange: (enabled: boolean) => void
+  onQRConnect: () => void
 }
 
 function groupByDate(conversations: Conversation[]) {
@@ -42,7 +43,7 @@ function groupByDate(conversations: Conversation[]) {
   return groups.filter((g) => g.items.length > 0)
 }
 
-export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgents, puaMode, onSelect, onNew, onDelete, onToggleTheme, onClose, onAgentsChange, onPuaModeChange }: Props) {
+export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgents, puaMode, onSelect, onNew, onDelete, onToggleTheme, onClose, onAgentsChange, onPuaModeChange, onQRConnect }: Props) {
   const [search, setSearch] = useState('')
   const filtered = search
     ? conversations.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()))
@@ -68,6 +69,9 @@ export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgen
             <X size={18} />
           </button>
           <div className="flex items-center gap-1 ml-auto">
+            <button onClick={onQRConnect} className="p-1.5 rounded-lg hover:bg-bg-300 text-text-300 transition-colors" title="手机扫码连接">
+              <QrCode size={16} />
+            </button>
             <button onClick={onToggleTheme} className="p-1.5 rounded-lg hover:bg-bg-300 text-text-300 transition-colors">
               {themeMode === 'light' ? <Moon size={16} /> : <Sun size={16} />}
             </button>

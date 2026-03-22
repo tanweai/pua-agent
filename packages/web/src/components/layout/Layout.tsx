@@ -5,6 +5,7 @@ import { ChatView } from '../chat/ChatView'
 import { ArtifactPanel } from '../artifacts/ArtifactPanel'
 import { FileDropZone } from '../input/FileDropZone'
 import { SearchDialog } from '../ui/SearchDialog'
+import { QRConnect } from '../ui/QRConnect'
 import { ToastContainer } from '../ui/ToastContainer'
 import { useTheme } from '../../hooks/useTheme'
 import { useConversation } from '../../hooks/useConversation'
@@ -17,6 +18,7 @@ export function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [activeArtifact, setActiveArtifact] = useState<ArtifactFile | null>(null)
+  const [qrOpen, setQrOpen] = useState(false)
   const [puaMode, setPuaMode] = useState(() => {
     try { return localStorage.getItem('pua-mode') === 'true' } catch { return false }
   })
@@ -78,6 +80,7 @@ export function Layout() {
         onClose={() => setSidebarOpen(false)}
         onAgentsChange={updateAgents}
         onPuaModeChange={(v) => { setPuaMode(v); localStorage.setItem('pua-mode', String(v)) }}
+        onQRConnect={() => setQrOpen(true)}
       />
 
       <FileDropZone onDrop={handleFileDrop}>
@@ -121,6 +124,8 @@ export function Layout() {
         onSelect={(id) => { selectConversation(id); setSearchOpen(false) }}
         onClose={() => setSearchOpen(false)}
       />
+
+      <QRConnect isOpen={qrOpen} onClose={() => setQrOpen(false)} />
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
