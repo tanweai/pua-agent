@@ -42,6 +42,14 @@ export interface TaskProgress {
   summary?: string
 }
 
+export interface AgentResult {
+  subtype: string  // 'success' | 'error_max_turns' | 'error_max_budget_usd' etc.
+  totalCostUsd?: number
+  totalInputTokens?: number
+  totalOutputTokens?: number
+  numTurns?: number
+}
+
 export interface Message {
   id: string
   role: 'user' | 'assistant'
@@ -49,6 +57,7 @@ export interface Message {
   blocks: ContentBlock[]
   toolResults: Record<string, ToolResultBlock>
   taskProgress?: Record<string, TaskProgress>
+  agentResult?: AgentResult
   model?: string
   isStreaming: boolean
   stopReason?: string

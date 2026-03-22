@@ -7,6 +7,8 @@ export interface AgentDefinition {
   description: string
   prompt: string
   tools: string[]
+  model: string  // 'inherit' | 'sonnet' | 'opus' | 'haiku'
+  maxTurns: number
   enabled: boolean
 }
 
@@ -15,7 +17,9 @@ interface Props {
   onChange: (agents: AgentDefinition[]) => void
 }
 
+const ALL_TOOLS = ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch', 'Agent', 'Skill', 'Write', 'Edit', 'NotebookEdit']
 const DEFAULT_TOOLS = ['Read', 'Glob', 'Grep', 'Bash', 'WebSearch', 'WebFetch']
+const MODEL_OPTIONS = ['inherit', 'sonnet', 'opus', 'haiku']
 
 export function AgentConfig({ agents, onChange }: Props) {
   const [expanded, setExpanded] = useState(false)
@@ -28,6 +32,8 @@ export function AgentConfig({ agents, onChange }: Props) {
       description: '',
       prompt: '',
       tools: [...DEFAULT_TOOLS],
+      model: 'inherit',
+      maxTurns: 10,
       enabled: true,
     }
     onChange([...agents, newAgent])
@@ -107,8 +113,27 @@ export function AgentConfig({ agents, onChange }: Props) {
                     rows={2}
                     className="w-full text-[11px] bg-bg-200 rounded px-2 py-1 outline-none text-text-200 placeholder:text-text-400 resize-none"
                   />
+                  <div className="flex items-center gap-2">
+                    <select
+                      value={agent.model}
+                      onChange={(e) => handleUpdate(agent.id, 'model', e.target.value)}
+                      className="text-[11px] bg-bg-200 rounded px-1.5 py-1 outline-none text-text-200"
+                    >
+                      {MODEL_OPTIONS.map(m => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <label className="flex items-center gap-1 text-[10px] text-text-300">
+                      Max turns:
+                      <input
+                        type="number"
+                        value={agent.maxTurns}
+                        onChange={(e) => handleUpdate(agent.id, 'maxTurns', parseInt(e.target.value) || 10)}
+                        min={1} max={50}
+                        className="w-12 text-[11px] bg-bg-200 rounded px-1 py-0.5 outline-none text-text-200"
+                      />
+                    </label>
+                  </div>
                   <div className="flex flex-wrap gap-1">
-                    {DEFAULT_TOOLS.map(tool => (
+                    {ALL_TOOLS.map(tool => (
                       <label key={tool} className="flex items-center gap-1 text-[10px] text-text-300">
                         <input
                           type="checkbox"

@@ -136,6 +136,18 @@ export function InputArea({ isStreaming, model, onSend, onStop, onModelChange, p
             </div>
 
             <div className="flex items-center gap-2">
+              {model.useAgent && (
+                <select
+                  value="high"
+                  className="text-[11px] bg-bg-200 border border-border-200 rounded-lg px-1.5 py-1 text-text-300 outline-none cursor-pointer"
+                  title="Effort level"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Med</option>
+                  <option value="high">High</option>
+                  <option value="max">Max</option>
+                </select>
+              )}
               <ModelSelector selected={model} onChange={onModelChange} />
 
               {isStreaming ? (

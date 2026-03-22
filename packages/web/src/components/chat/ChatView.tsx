@@ -155,6 +155,21 @@ export function ChatView({
           case 'task_notification':
             dispatch({ type: 'TASK_NOTIFICATION', toolUseId: event.tool_use_id })
             break
+
+          case 'agent_result':
+            dispatch({
+              type: 'AGENT_RESULT',
+              subtype: event.subtype,
+              totalCostUsd: event.total_cost_usd,
+              totalInputTokens: event.total_input_tokens,
+              totalOutputTokens: event.total_output_tokens,
+              numTurns: event.num_turns,
+            })
+            break
+
+          case 'rate_limit':
+            onShowToast(`Rate limited — resets at ${new Date(event.resets_at).toLocaleTimeString()}`, 'error')
+            break
         }
       },
       onError: (err) => {

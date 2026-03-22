@@ -40,6 +40,26 @@ export function AssistantMessage({ message, onToggleThinking, onShowToast, onSen
           onSendPrompt={onSendPrompt}
         />
 
+        {/* Agent result badge */}
+        {message.agentResult && !message.isStreaming && (
+          <div className="mt-2 flex items-center gap-3 text-[11px] text-text-400 tool-card-enter">
+            {message.agentResult.subtype === 'success' ? (
+              <span className="px-2 py-0.5 rounded-full bg-success/10 text-success">completed</span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full bg-error/10 text-error">{message.agentResult.subtype}</span>
+            )}
+            {message.agentResult.numTurns != null && (
+              <span>{message.agentResult.numTurns} turns</span>
+            )}
+            {message.agentResult.totalInputTokens != null && message.agentResult.totalOutputTokens != null && (
+              <span>{(message.agentResult.totalInputTokens / 1000).toFixed(0)}k in / {(message.agentResult.totalOutputTokens / 1000).toFixed(0)}k out</span>
+            )}
+            {message.agentResult.totalCostUsd != null && (
+              <span>${message.agentResult.totalCostUsd.toFixed(4)}</span>
+            )}
+          </div>
+        )}
+
         {/* Action bar — separate hover zone, not affected by search cards */}
         {!message.isStreaming && message.blocks.length > 0 && (
           <div className="group/actions mt-2">

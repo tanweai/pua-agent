@@ -22,13 +22,15 @@ export function useAgentConfig() {
 
   // Convert to Agent SDK format for API request
   const agentSdkConfig = useMemo(() => {
-    const config: Record<string, { description: string; prompt?: string; tools?: string[] }> = {}
+    const config: Record<string, { description: string; prompt?: string; tools?: string[]; model?: string; maxTurns?: number }> = {}
     for (const a of agents) {
       if (a.enabled && a.name) {
         config[a.name] = {
           description: a.description,
           ...(a.prompt && { prompt: a.prompt }),
           ...(a.tools.length > 0 && { tools: a.tools }),
+          ...(a.model && a.model !== 'inherit' && { model: a.model }),
+          ...(a.maxTurns && a.maxTurns !== 10 && { maxTurns: a.maxTurns }),
         }
       }
     }

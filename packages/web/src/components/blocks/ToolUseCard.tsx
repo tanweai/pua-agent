@@ -9,6 +9,8 @@ import { AskUserCard } from './AskUserCard'
 import { TeamCard } from './TeamCard'
 import { FileEditCard } from './FileEditCard'
 import { SkillCard } from './SkillCard'
+import { BashCard } from './BashCard'
+import { ReadCard } from './ReadCard'
 import type { ToolUseBlock, ToolResultBlock, TaskProgress } from '../../types/message'
 
 interface Props {
@@ -77,7 +79,17 @@ export function ToolUseCard({ block, result, progress, onSendPrompt }: Props) {
     return <SkillCard block={block} result={result} />
   }
 
-  // === Generic compact display for Read, Bash, Glob, Grep, SendMessage, etc. ===
+  // === Bash ===
+  if (name === 'bash') {
+    return <BashCard block={block} result={result} />
+  }
+
+  // === Read ===
+  if (name === 'read') {
+    return <ReadCard block={block} result={result} />
+  }
+
+  // === Generic compact display for Glob, Grep, SendMessage, etc. ===
   const Icon = getToolIcon(block.toolName)
   const inputPreview = block.input?.file_path
     || block.input?.command?.slice(0, 60)

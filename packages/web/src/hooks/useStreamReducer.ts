@@ -1,5 +1,5 @@
 import { useReducer, useCallback } from 'react'
-import type { ContentBlock, ThinkingBlock, TextBlock, ToolUseBlock, ToolResultBlock, TaskProgress, Message } from '../types/message'
+import type { ContentBlock, ThinkingBlock, TextBlock, ToolUseBlock, ToolResultBlock, TaskProgress, AgentResult, Message } from '../types/message'
 import type { ContentBlockStartEvent } from '../types/stream'
 import { generateThinkingSummary } from '../utils/generateSummary'
 
@@ -15,6 +15,7 @@ type Action =
   | { type: 'TASK_STARTED'; toolUseId: string }
   | { type: 'TASK_PROGRESS'; toolUseId: string; toolUseCount?: number; durationMs?: number; summary?: string }
   | { type: 'TASK_NOTIFICATION'; toolUseId: string }
+  | { type: 'AGENT_RESULT'; subtype: string; totalCostUsd?: number; totalInputTokens?: number; totalOutputTokens?: number; numTurns?: number }
   | { type: 'TOGGLE_THINKING'; index: number }
   | { type: 'ERROR'; error: string }
   | { type: 'RESET' }
@@ -138,6 +139,17 @@ function streamReducer(state: Message, action: Action): Message {
         return { ...state, taskProgress: { ...state.taskProgress, [action.toolUseId]: tp } }
       }
       return state
+    }
+
+    case 'AGENT_RESULT': {
+      const ar: AgentResult = {
+        subtype: action.subtype,
+        totalCostUsd: action.totalCostUsd,
+        totalInputTokens: action.totalInputTokens,
+        totalOutputTokens: action.totalOutputTokens,
+        numTurns: action.numTurns,
+      }
+      return { ...state, agentResult: ar }
     }
 
     case 'MESSAGE_DELTA':

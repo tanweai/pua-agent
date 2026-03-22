@@ -98,7 +98,13 @@ IMPORTANT CITATION RULES:
         if (msg.type === 'system') {
           if (msg.subtype === 'init') {
             console.log(`[Agent] Session: ${msg.session_id}`)
-            await writeEvent(stream, { type: 'session_init' as any, session_id: msg.session_id })
+            await writeEvent(stream, {
+              type: 'session_init' as any,
+              session_id: msg.session_id,
+              tools: msg.tools,
+              agents: msg.agents,
+              mcp_servers: msg.mcp_servers,
+            })
           }
           if (msg.subtype === 'task_started') {
             await writeEvent(stream, {
@@ -146,6 +152,23 @@ IMPORTANT CITATION RULES:
         // === result: final output ===
         if (msg.type === 'result') {
           console.log(`[Agent] Done: ${msg.subtype}, cost=$${msg.total_cost_usd?.toFixed(4) || '?'}`)
+          await writeEvent(stream, {
+            type: 'agent_result' as any,
+            subtype: msg.subtype,
+            total_cost_usd: msg.total_cost_usd,
+            total_input_tokens: msg.usage?.input_tokens,
+            total_output_tokens: msg.usage?.output_tokens,
+            num_turns: msg.num_turns,
+          })
+        }
+
+        // === rate_limit_event ===
+        if (msg.type === 'rate_limit_event') {
+          await writeEvent(stream, {
+            type: 'rate_limit' as any,
+            utilization: msg.utilization,
+            resets_at: msg.resets_at,
+          })
         }
       }
     } catch (err: any) {
