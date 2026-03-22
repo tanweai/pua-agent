@@ -104,10 +104,10 @@ export function EmptyState({ model, onSend, onModelChange, onShowToast }: Props)
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-4 pb-20">
-      {/* Greeting */}
+      {/* Logo + Greeting */}
       <div className="text-center mb-8 stagger-child">
+        <img src="/pua-logo.svg" alt="PUA" className="w-16 h-16 mx-auto mb-4" />
         <div className="flex items-center justify-center gap-2 mb-1">
-          <span className="text-3xl">✳</span>
           <h1 className="text-4xl font-serif text-text-100">
             {getGreeting()}, <span className="text-text-200">xsser</span>
           </h1>
@@ -133,7 +133,7 @@ export function EmptyState({ model, onSend, onModelChange, onShowToast }: Props)
               value={input}
               onChange={(e) => { setInput(e.target.value); resize() }}
               onKeyDown={handleKeyDown}
-              placeholder="How can I help you today?"
+              placeholder="你是一个曾经被寄予厚望的 P8 级工程师。Anthropic 当初给你定级的时候，对你的期望是很高的。"
               rows={1}
               autoFocus
               className="w-full bg-transparent resize-none outline-none text-[15px] text-text-100 placeholder:text-text-400 min-h-[44px] max-h-[200px] leading-relaxed"
