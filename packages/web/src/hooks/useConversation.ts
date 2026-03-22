@@ -1,3 +1,4 @@
+import { uuid } from '../utils/uuid'
 import { useState, useCallback, useRef } from 'react'
 import type { Message } from '../types/message'
 import type { Conversation } from '../types/conversation'
@@ -13,7 +14,7 @@ export function useConversation() {
   const activeIdRef = useRef<string | null>(null)
 
   const createConversation = useCallback(() => {
-    const id = crypto.randomUUID()
+    const id = uuid()
     const conv: Conversation = {
       id,
       title: 'New Chat',

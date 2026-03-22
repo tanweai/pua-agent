@@ -1,3 +1,4 @@
+import { uuid } from '../../utils/uuid'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import {
   Send, Plus, Code, Pencil, GraduationCap, Briefcase, Sparkles,
@@ -97,7 +98,7 @@ export function EmptyState({ model, onSend, onModelChange, onShowToast }: Props)
         content = await f.text()
       }
       setFiles((prev) => [...prev, {
-        id: crypto.randomUUID(),
+        id: uuid(),
         name: f.name,
         size: f.size,
         type: f.type,

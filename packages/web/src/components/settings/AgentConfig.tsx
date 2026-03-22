@@ -1,3 +1,4 @@
+import { uuid } from '../../utils/uuid'
 import { Plus, Trash2, Bot, ChevronDown, ChevronUp, Save } from 'lucide-react'
 import { useState, useCallback } from 'react'
 
@@ -27,7 +28,7 @@ export function AgentConfig({ agents, onChange }: Props) {
 
   const handleAdd = useCallback(() => {
     const newAgent: AgentDefinition = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       name: '',
       description: '',
       prompt: '',

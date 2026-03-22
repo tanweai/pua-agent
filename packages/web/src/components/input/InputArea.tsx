@@ -1,3 +1,4 @@
+import { uuid } from '../../utils/uuid'
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { Send, Square, Plus, Flame } from 'lucide-react'
 import { ModelSelector } from './ModelSelector'
@@ -54,7 +55,7 @@ export function InputArea({ isStreaming, model, puaMode, onSend, onStop, onModel
         content = await f.text()
       }
       setFiles((prev) => [...prev, {
-        id: crypto.randomUUID(),
+        id: uuid(),
         name: f.name,
         size: f.size,
         type: f.type,

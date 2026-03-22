@@ -1,3 +1,4 @@
+import { uuid } from '../utils/uuid'
 import { useState, useCallback, useRef } from 'react'
 
 export interface Toast {
@@ -11,7 +12,7 @@ export function useToast() {
   const timerMap = useRef(new Map<string, ReturnType<typeof setTimeout>>())
 
   const show = useCallback((message: string, type: Toast['type'] = 'success', duration = 3000) => {
-    const id = crypto.randomUUID()
+    const id = uuid()
     setToasts((prev) => [...prev, { id, message, type }])
 
     const timer = setTimeout(() => {

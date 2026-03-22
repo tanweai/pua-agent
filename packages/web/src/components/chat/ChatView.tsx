@@ -1,3 +1,4 @@
+import { uuid } from '../../utils/uuid'
 import { useCallback, useRef, useEffect, useState } from 'react'
 import { MessageList } from './MessageList'
 import { InputArea } from '../input/InputArea'
@@ -71,7 +72,7 @@ export function ChatView({
     }
 
     const userMsg: Message = {
-      id: crypto.randomUUID(),
+      id: uuid(),
       role: 'user',
       content,  // Display original text (no image paths) in UI
       blocks: [],
