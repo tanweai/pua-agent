@@ -1,4 +1,4 @@
-# Handoff — PUA Agent 前端项目
+# Handoff — PUA Agent 前端项目 (2026-03-23)
 
 ## 项目位置
 `/Users/xsser/Downloads/claude-agent/`
@@ -10,53 +10,71 @@ GitHub: `tanweai/pua-agent`
 - **API**: 智谱 GLM via `open.bigmodel.cn/api/anthropic`
 - **Agent SDK**: `@anthropic-ai/claude-agent-sdk@0.2.81`, `includePartialMessages: true`
 
-## 当前状态 — Phase 1 + Phase 2 已完成功能
+## 当前状态 — 全部已完成功能
 
 ### Phase 1 (Core)
-- 完整 SSE 状态机 (useReducer)
-- ThinkingBlock (折叠/展开, Show more, CSS Grid 动画)
-- SearchCard (WebSearch 结果, 展开/收起, favicon+title+domain)
+- SSE 状态机 (useReducer) + ThinkingBlock + SearchCard + CitationChip
 - 多轮 Agent SDK session resume
-- 内联引用 [SourceName] → CitationChip + hover popover
-- Sources 底部列表自动清除 (多模式 regex)
-- SubagentCard (Agent/Task 工具调用显示)
-- Skill/Read/Bash/Glob/Grep 紧凑显示
+- SubagentCard + Skill/Read/Bash/Glob/Grep 工具卡片
 - 暗色模式, 空状态, ScrollToBottom, Toast, 键盘快捷键
-- Artifacts 面板 (Preview/Code tabs)
-- 文件拖拽上传, FileChip
-- system-reminder #e8453c 红色卡片显示
+- Artifacts 面板 + 文件拖拽上传 + system-reminder 红色卡片
 
 ### Phase 2 (Agent Capabilities)
-- **task_progress 事件转发** — 后端检测 system/task_started|task_progress|task_notification 并转发 SSE
-- **TaskProgressBar** — SubagentCard 内实时进度条 + tool_use_count + duration + AI summary
-- **Team Panel** — 当 2+ agent blocks 存在时，显示聚合看板（状态/进度/摘要）
-- **Skills UI** — 输入框上方快捷 skill chips (Web Search/Analyze File/Run Command/Subagent)
-  - 后端 GET /api/agent/tools 返回可用工具列表
-  - 点击展开显示全部工具
-- **Agent 定义 UI** — Sidebar 底部 Custom Agents 面板
-  - 添加/编辑/删除/启用禁用自定义 agent
-  - name/description/prompt/tools 配置
-  - localStorage 持久化
-  - 自动转换为 Agent SDK `agents` 参数格式
-- **正文内联引用强化** — 更多 strip 模式 (References/参考资料/出处/编号列表)
-  - MarkdownRenderer fuzzy 匹配增强（title words, domain without TLD）
-- **agentProgressSummaries** — 后端开启 AI 生成的进度摘要
-- **allowedTools** 扩展 — 新增 Agent + Skill 工具
+- task_progress/task_notification 事件转发 + SubagentCard 进度条
+- TeamPanel 聚合看板 (2+ agent blocks)
+- Agent 定义 UI (Sidebar Custom Agents, localStorage 持久化)
 
-## Phase 3 待完成
-1. **Visualizer Widget** — 已有 WidgetRenderer 组件, 需要模型实际调用 visualize:show_widget
-2. **Agent Team Live Dashboard** — 独立侧面板实时看板（vs 当前 inline TeamPanel）
-3. **Session History UI** — 利用 Agent SDK listSessions/getSessionMessages API
-4. **Settings Panel** — 独立设置页面（模型选择、API 配置、主题等）
+### Phase 3 (SDK Gap Closure)
+- 13 个工具专属 UI 卡片: TaskCard, AskUserCard, TeamCard, FileEditCard, SkillCard, BashCard, ReadCard + 原有的 SearchCard, FetchCard, SubagentCard, CodeExecCard, WidgetRenderer
+- Agent Result Badge (cost/usage/turns)
+- rate_limit 事件 Toast
+
+### Phase 4 (PUA Mode + UX)
+- PUA Mode: P7/P9/P10 Agent Team 注入 Agent SDK
+- claude.ai 风格居中首页 (问候语+居中输入框+快捷分类+下拉菜单)
+- 第一次发消息后切换到消息列表+底部输入框布局
+- PUA 按钮在输入框工具栏 (🔥 PUA on/off)
+- 图片上传→保存→路径传 prompt→Agent Read 识别
+- QR 扫码连接 (二维码弹窗, 局域网 IP)
+- crypto.randomUUID fallback (手机 HTTP 访问兼容)
+- PUA Agent 身份: 北京探微杜渐科技, openpua.ai
+- 主色 #e8453c, Spinner 双层圆环动画
+
+## 待开发 — 邀请码+注册登录系统
+
+### 后端
+1. **数据存储**: 用 JSON 文件或 SQLite 存储用户表 (invite_code, username, password_hash, token, created_at)
+2. **POST /api/auth/register**: 验证邀请码→创建用户→返回 JWT
+3. **POST /api/auth/login**: 验证用户名密码→返回 JWT
+4. **Auth 中间件**: 保护 /api/agent/stream 等端点, 验证 Bearer token
+5. **邀请码管理**: 预设邀请码列表, 可选: GET /api/auth/invite-codes (admin)
+
+### 前端
+6. **AuthPage 组件**: 登录/注册切换, 邀请码输入框(注册时), 用户名/密码
+7. **Auth Context**: React Context + localStorage token 持久化
+8. **路由守卫**: 无 token → 跳转 AuthPage, 有 token → 进入 ChatView
+9. **Header 用户信息**: 显示用户名, 登出按钮
+10. **useSSEStream**: 请求头加 Authorization: Bearer <token>
+
+### 设计要点
+- 邀请码一次性使用 (used=true 后不可再用)
+- JWT 包含 username + exp, 有效期 7 天
+- 密码用 bcrypt hash (或简单 SHA-256 for MVP)
+- 登录页面保持 PUA Agent 品牌风格 (#e8453c 主色, PUA logo)
 
 ## 关键架构决策
-- Agent 模式: 多 turn 的 message_start/stop 合并为一条消息 (agentBlockOffset 追踪)
-- Agent 子进程 env 必须包含 `...process.env` (PATH 不能丢)
-- CLI path 通过 `realpathSync` 解析 pnpm symlink
-- settingSources 不能用 (hooks 冲突导致 exit 1)
-- taskProgress 以 `Record<string, TaskProgress>` 存储, key = tool_use_id
-- Team Panel 聚合所有 Agent/Task tool_use blocks, 当 ≥2 时自动显示
-- Custom agents 通过 localStorage 持久化, 转换为 SDK agents 参数
+- Agent SDK systemPrompt 必须用 string 类型 (NOT preset) 才能控制身份
+- preset 'claude_code' 硬编码 "You are Claude" 无法被 append 覆盖
+- /pua slash command 在 Agent SDK 中不工作 (SDK 没有完整 CLI 运行时)
+- 图片上传: FileReader.readAsDataURL → POST /api/upload/image → 路径追加到 prompt → Agent Read
+- crypto.randomUUID 只在 Secure Context 可用, 手机 HTTP 访问需要 fallback
+
+## 踩坑记录
+- `crypto.randomUUID()` 在 `http://192.168.x.x` 不可用 → uuid() fallback
+- `/pua` prompt 前缀导致 Agent SDK 静默完成 cost=0 → 去掉前缀, 用 systemPrompt 注入
+- preset systemPrompt 的 append 无法覆盖 Claude 身份 → 改用 string 类型
+- 图片 f.text() 返回二进制乱码导致白屏 → FileReader.readAsDataURL
+- tool_result `{"results":[]}` 显示在卡片里 → 过滤空结果
 
 ## 启动命令
 ```bash
