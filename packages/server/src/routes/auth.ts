@@ -1,7 +1,7 @@
 import { Hono } from 'hono'
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs'
 import { join } from 'path'
 
 export const authRoute = new Hono()
@@ -29,7 +29,6 @@ interface InviteCode {
 function ensureDataDir() {
   const dir = join(process.cwd(), '.data')
   if (!existsSync(dir)) {
-    const { mkdirSync } = require('fs')
     mkdirSync(dir, { recursive: true })
   }
 }

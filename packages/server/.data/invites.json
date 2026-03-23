@@ -1,0 +1,28 @@
+[
+  {
+    "code": "PUA2026",
+    "used": true,
+    "createdAt": "2026-03-23T02:27:05.779Z",
+    "usedBy": "xsser"
+  },
+  {
+    "code": "AGENT888",
+    "used": false,
+    "createdAt": "2026-03-23T02:27:05.781Z"
+  },
+  {
+    "code": "TANWEI666",
+    "used": false,
+    "createdAt": "2026-03-23T02:27:05.781Z"
+  },
+  {
+    "code": "OPENPUA",
+    "used": false,
+    "createdAt": "2026-03-23T02:27:05.781Z"
+  },
+  {
+    "code": "BETA001",
+    "used": false,
+    "createdAt": "2026-03-23T02:27:05.781Z"
+  }
+]
