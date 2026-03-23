@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Plus, Search, MessageSquare, Trash2, Sun, Moon, Menu, X, Flame, QrCode, LogOut, Settings } from 'lucide-react'
-import { SettingsPanel } from '../settings/SettingsPanel'
 import { AgentConfig } from '../settings/AgentConfig'
 import type { AgentDefinition } from '../settings/AgentConfig'
 import type { Conversation } from '../../types/conversation'
@@ -21,6 +20,7 @@ interface Props {
   onAgentsChange: (agents: AgentDefinition[]) => void
   onPuaModeChange: (enabled: boolean) => void
   onQRConnect: () => void
+  onSettings: () => void
   username?: string | null
   onLogout?: () => void
 }
@@ -46,9 +46,8 @@ function groupByDate(conversations: Conversation[]) {
   return groups.filter((g) => g.items.length > 0)
 }
 
-export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgents, puaMode, onSelect, onNew, onDelete, onToggleTheme, onClose, onAgentsChange, onPuaModeChange, onQRConnect, username, onLogout }: Props) {
+export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgents, puaMode, onSelect, onNew, onDelete, onToggleTheme, onClose, onAgentsChange, onPuaModeChange, onQRConnect, onSettings, username, onLogout }: Props) {
   const [search, setSearch] = useState('')
-  const [settingsOpen, setSettingsOpen] = useState(false)
   const filtered = search
     ? conversations.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()))
     : conversations
@@ -163,7 +162,7 @@ export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgen
               </div>
               <span className="text-[12px] text-text-300 truncate flex-1">{username}</span>
               <button
-                onClick={() => setSettingsOpen(true)}
+                onClick={onSettings}
                 className="p-1 rounded-lg hover:bg-bg-300 text-text-400 hover:text-text-200 transition-colors"
                 title="设置"
               >
@@ -179,12 +178,6 @@ export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgen
             </div>
           )}
 
-          <SettingsPanel
-            isOpen={settingsOpen}
-            username={username || ''}
-            onClose={() => setSettingsOpen(false)}
-            onLogout={onLogout || (() => {})}
-          />
         </div>
       </aside>
     </>

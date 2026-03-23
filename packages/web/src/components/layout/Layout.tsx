@@ -6,6 +6,7 @@ import { ArtifactPanel } from '../artifacts/ArtifactPanel'
 import { FileDropZone } from '../input/FileDropZone'
 import { SearchDialog } from '../ui/SearchDialog'
 import { QRConnect } from '../ui/QRConnect'
+import { SettingsPanel } from '../settings/SettingsPanel'
 import { ToastContainer } from '../ui/ToastContainer'
 import { useTheme } from '../../hooks/useTheme'
 import { useConversation } from '../../hooks/useConversation'
@@ -24,6 +25,7 @@ export function Layout({ username, onLogout }: LayoutProps) {
   const [searchOpen, setSearchOpen] = useState(false)
   const [activeArtifact, setActiveArtifact] = useState<ArtifactFile | null>(null)
   const [qrOpen, setQrOpen] = useState(false)
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const [puaMode, setPuaMode] = useState(() => {
     try { return localStorage.getItem('pua-mode') === 'true' } catch { return false }
   })
@@ -86,6 +88,7 @@ export function Layout({ username, onLogout }: LayoutProps) {
         onAgentsChange={updateAgents}
         onPuaModeChange={(v) => { setPuaMode(v); localStorage.setItem('pua-mode', String(v)) }}
         onQRConnect={() => setQrOpen(true)}
+        onSettings={() => setSettingsOpen(true)}
         username={username}
         onLogout={onLogout}
       />
@@ -133,6 +136,7 @@ export function Layout({ username, onLogout }: LayoutProps) {
       />
 
       <QRConnect isOpen={qrOpen} onClose={() => setQrOpen(false)} />
+      <SettingsPanel isOpen={settingsOpen} username={username || ''} onClose={() => setSettingsOpen(false)} onLogout={onLogout || (() => {})} />
 
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
     </div>
