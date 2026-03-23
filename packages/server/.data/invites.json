@@ -12,8 +12,9 @@
   },
   {
     "code": "TANWEI666",
-    "used": false,
-    "createdAt": "2026-03-23T02:27:05.781Z"
+    "used": true,
+    "createdAt": "2026-03-23T02:27:05.781Z",
+    "usedBy": "xsser1"
   },
   {
     "code": "OPENPUA",

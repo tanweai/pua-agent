@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Plus, Search, MessageSquare, Trash2, Sun, Moon, Menu, X, Flame, QrCode, LogOut } from 'lucide-react'
+import { Plus, Search, MessageSquare, Trash2, Sun, Moon, Menu, X, Flame, QrCode, LogOut, Settings } from 'lucide-react'
+import { SettingsPanel } from '../settings/SettingsPanel'
 import { AgentConfig } from '../settings/AgentConfig'
 import type { AgentDefinition } from '../settings/AgentConfig'
 import type { Conversation } from '../../types/conversation'
@@ -47,6 +48,7 @@ function groupByDate(conversations: Conversation[]) {
 
 export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgents, puaMode, onSelect, onNew, onDelete, onToggleTheme, onClose, onAgentsChange, onPuaModeChange, onQRConnect, username, onLogout }: Props) {
   const [search, setSearch] = useState('')
+  const [settingsOpen, setSettingsOpen] = useState(false)
   const filtered = search
     ? conversations.filter((c) => c.title.toLowerCase().includes(search.toLowerCase()))
     : conversations
@@ -153,10 +155,20 @@ export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgen
           {/* Custom Agents config */}
           <AgentConfig agents={customAgents} onChange={onAgentsChange} />
 
-          {/* User info + Logout */}
+          {/* User info + Settings + Logout */}
           {username && (
-            <div className="border-t border-border-100 mt-2 pt-2 px-3 py-2 flex items-center justify-between">
-              <span className="text-[12px] text-text-300 truncate">{username}</span>
+            <div className="border-t border-border-100 mt-2 pt-2 px-3 py-2 flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-accent-100/10 flex items-center justify-center text-[11px] font-medium text-accent-100 shrink-0">
+                {username[0].toUpperCase()}
+              </div>
+              <span className="text-[12px] text-text-300 truncate flex-1">{username}</span>
+              <button
+                onClick={() => setSettingsOpen(true)}
+                className="p-1 rounded-lg hover:bg-bg-300 text-text-400 hover:text-text-200 transition-colors"
+                title="设置"
+              >
+                <Settings size={14} />
+              </button>
               <button
                 onClick={onLogout}
                 className="p-1 rounded-lg hover:bg-bg-300 text-text-400 hover:text-error transition-colors"
@@ -166,6 +178,13 @@ export function Sidebar({ conversations, activeId, themeMode, isOpen, customAgen
               </button>
             </div>
           )}
+
+          <SettingsPanel
+            isOpen={settingsOpen}
+            username={username || ''}
+            onClose={() => setSettingsOpen(false)}
+            onLogout={onLogout || (() => {})}
+          />
         </div>
       </aside>
     </>

@@ -170,6 +170,90 @@ authRoute.get('/auth/me', async (c) => {
   }
 })
 
+// Reset password (via invite code — no email system)
+authRoute.post('/auth/reset-password', async (c) => {
+  const { username, inviteCode, newPassword } = await c.req.json<{
+    username: string
+    inviteCode: string
+    newPassword: string
+  }>()
+
+  if (!username || !inviteCode || !newPassword) {
+    return c.json({ error: '请填写所有字段' }, 400)
+  }
+  if (newPassword.length < 6) {
+    return c.json({ error: '新密码至少 6 个字符' }, 400)
+  }
+
+  const users = loadUsers()
+  const user = users.find(u => u.username === username)
+  if (!user) {
+    return c.json({ error: '用户不存在' }, 400)
+  }
+  if (user.inviteCode !== inviteCode) {
+    return c.json({ error: '邀请码不匹配' }, 400)
+  }
+
+  user.passwordHash = await bcrypt.hash(newPassword, 10)
+  saveUsers(users)
+
+  console.log(`[Auth] Password reset: ${username}`)
+  return c.json({ success: true })
+})
+
+// Change password (authenticated)
+authRoute.post('/auth/change-password', async (c) => {
+  const auth = c.req.header('Authorization')
+  if (!auth?.startsWith('Bearer ')) return c.json({ error: 'Unauthorized' }, 401)
+
+  const payload = verifyToken(auth.slice(7))
+  if (!payload) return c.json({ error: 'Token expired' }, 401)
+
+  const { oldPassword, newPassword } = await c.req.json<{
+    oldPassword: string
+    newPassword: string
+  }>()
+
+  if (!oldPassword || !newPassword) return c.json({ error: '请填写所有字段' }, 400)
+  if (newPassword.length < 6) return c.json({ error: '新密码至少 6 个字符' }, 400)
+
+  const users = loadUsers()
+  const user = users.find(u => u.username === payload.username)
+  if (!user) return c.json({ error: '用户不存在' }, 400)
+
+  const valid = await bcrypt.compare(oldPassword, user.passwordHash)
+  if (!valid) return c.json({ error: '原密码错误' }, 400)
+
+  user.passwordHash = await bcrypt.hash(newPassword, 10)
+  saveUsers(users)
+
+  console.log(`[Auth] Password changed: ${payload.username}`)
+  return c.json({ success: true })
+})
+
+// Delete account (authenticated)
+authRoute.post('/auth/delete-account', async (c) => {
+  const auth = c.req.header('Authorization')
+  if (!auth?.startsWith('Bearer ')) return c.json({ error: 'Unauthorized' }, 401)
+
+  const payload = verifyToken(auth.slice(7))
+  if (!payload) return c.json({ error: 'Token expired' }, 401)
+
+  const { password } = await c.req.json<{ password: string }>()
+  const users = loadUsers()
+  const user = users.find(u => u.username === payload.username)
+  if (!user) return c.json({ error: '用户不存在' }, 400)
+
+  const valid = await bcrypt.compare(password, user.passwordHash)
+  if (!valid) return c.json({ error: '密码错误' }, 400)
+
+  const filtered = users.filter(u => u.username !== payload.username)
+  saveUsers(filtered)
+
+  console.log(`[Auth] Account deleted: ${payload.username}`)
+  return c.json({ success: true })
+})
+
 // --- Auth middleware export ---
 export function verifyToken(token: string): { username: string } | null {
   try {
