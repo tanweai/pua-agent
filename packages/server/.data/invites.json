@@ -1,29 +1,28 @@
 [
   {
     "code": "PUA2026",
-    "used": true,
-    "createdAt": "2026-03-23T02:27:05.779Z",
-    "usedBy": "xsser"
+    "used": false,
+    "createdAt": "2026-03-23T08:47:50.171Z"
   },
   {
     "code": "AGENT888",
     "used": false,
-    "createdAt": "2026-03-23T02:27:05.781Z"
+    "createdAt": "2026-03-23T08:47:50.171Z"
   },
   {
     "code": "TANWEI666",
-    "used": true,
-    "createdAt": "2026-03-23T02:27:05.781Z",
-    "usedBy": "xsser1"
+    "used": false,
+    "createdAt": "2026-03-23T08:47:50.171Z"
   },
   {
     "code": "OPENPUA",
-    "used": false,
-    "createdAt": "2026-03-23T02:27:05.781Z"
+    "used": true,
+    "createdAt": "2026-03-23T08:47:50.171Z",
+    "usedBy": "xsser"
   },
   {
     "code": "BETA001",
     "used": false,
-    "createdAt": "2026-03-23T02:27:05.781Z"
+    "createdAt": "2026-03-23T08:47:50.171Z"
   }
 ]

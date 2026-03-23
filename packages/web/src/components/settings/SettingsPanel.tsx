@@ -63,7 +63,7 @@ export function SettingsPanel({ isOpen, username, onClose, onLogout }: Props) {
     <>
       <div className="fixed inset-0 bg-black/40 z-50" onClick={onClose} />
       <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
-        <div className="bg-bg-100 rounded-2xl shadow-2xl w-full max-w-md mx-4 pointer-events-auto dialog-enter overflow-hidden">
+        <div className="bg-bg-100 rounded-2xl shadow-2xl w-full max-w-2xl mx-4 pointer-events-auto dialog-enter overflow-hidden max-h-[85vh]">
           {/* Header */}
           <div className="flex items-center justify-between px-5 py-4 border-b border-border-100">
             <h3 className="text-[15px] font-medium text-text-100">设置</h3>
